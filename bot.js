@@ -72,6 +72,12 @@ cbot.registerCommand("kys", 'Kill Yourself', 'OOf', function() {
     return ":cry: :gun:";
 });
 
+cbot.registerCommand('gimme', 'Gimme', 'Gimme a random meme', async function() {
+    let res = await _utils.HTTPGet('https://meme-api.herokuapp.com/gimme', {});
+
+    return `${res.title}\n${res.url}`;
+});
+
 let codes = ["ar", "bg", "zhCN", "zhTW", "hr", "cs", "da", "nl", "en", "et", "tl", "fi", "fr", "de", "el", "iw", "hi", "hu", "is", "id", "ga", "it", "ja", "ko", "la", "lv", "lt", "mk", "mt", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk", "si", "es", "sv", "th", "tr", "vi"];
 cbot.registerCommand("translate", "Translate", `Translate using keys from one lang to another\nCodes can be one of ${codes.join()}` , async function(msg, src, dest, text) {
 	if (codes.indexOf(src) === -1 || codes.indexOf(dest) === -1) {
@@ -169,3 +175,21 @@ cbot.registerCommand('cmdhelp', 'CMD Help', 'Prints detailed information about a
         message: helpStr
     });
 }).addParam('command', 'string')
+
+/*
+let voteInfo = {};
+cbot.registerCommand('createVote', 'Create Vote', 'Create a new vote', function(user, title, options) {
+
+}).addParam('title', 'string').addParam('options', 'string');
+
+cbot.registerCommand('endVote', 'End Vote', 'Ends a vote', function(user) {
+
+}).addParam('voteId', 'number');
+
+cbot.registerCommand('endAllVotes', 'End All Vote', 'Ends all active votes', function(user) {
+
+});
+
+cbot.registerCommand('vote', 'Vote', 'Cast a ballot in an active vote!', function(user, option) {
+
+}).addParam('voteId', 'number').addParam('option', 'string');*/
