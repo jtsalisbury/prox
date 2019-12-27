@@ -6,6 +6,7 @@
     "author": "crazyscouter",
     "dependencies": {
         "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+        "dotenv": "^8.2.0",
         "request": "^2.88.0",
         "winston": "^3.2.1"
     },

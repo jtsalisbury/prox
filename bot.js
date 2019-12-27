@@ -1,8 +1,8 @@
 let Discord = require('discord.io');
 let logger = require('winston');
 
-let auth = require('./auth.json');
-let config = require('./config.json');
+require('dotenv').config();
+
 let CommandHandler = require('./classes/CommandHandlerClass');
 let _utils = require('./utils/utils');
 
@@ -13,7 +13,7 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 let bot = new Discord.Client({
-   token: auth.token,
+   token: process.env.DISCORD_TOKEN,
    autorun: true
 });
 
@@ -76,8 +76,8 @@ cbot.registerCommand("translate", "Translate", "Translate using keys from one la
         src: src,
         dest: dest,
         text: text,
-        email: config.translate.email,
-        password: config.translate.password
+        email: process.env.TRANSLATE_EMAIL,
+        password: process.env.TRANSLATE_PASSWORD
     }
 
     let response = await _utils.HTTPPost(url, payload);
@@ -104,7 +104,7 @@ cbot.registerCommand('search', 'Search', 'Searches Google for the first result a
     let getUrl = `https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/Search/WebSearchAPI?autoCorrect=true&pageNumber=1&pageSize=10&q=${term}&safeSearch=false`
     let headers = {
         "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
-	    "x-rapidapi-key": config.search.apiKey
+	    "x-rapidapi-key": process.env.SEARCH_APIKEY
     }
     let result = await _utils.HTTPGet(getUrl, headers);
 
