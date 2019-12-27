@@ -74,6 +74,23 @@ cbot.registerCommand('git', 'GitHub', 'View this on GitHub', function() {
     return 'https://github.com/jtsalisbury/discord-cbot';
 });
 
+cbot.registerCommand('weather', 'Weather', 'Check the weather in a city', async function(message, location) {
+    let url = `https://community-open-weather-map.p.rapidapi.com/weather?q=${location}`
+    let headers = {
+        "x-rapidapi-host": "community-open-weather-map.p.rapidapi.com",
+        "x-rapidapi-key": process.env.WEATHER_APIKEY
+    };
+
+    let result = await _utils.HTTPGet(url, headers);
+
+    let temps = result.main;
+    //TODO: Kelvin to Farenheight
+    let str = `Weather in ${result.name} is ${result.weather[0].description} \nTemp: ${temps.temp} (feels like ${temps.feels_like}), Max: ${temps.temp_max}, Min: ${temps.temp_min}\nHumidity: ${temps.humidity}\nWind speed: ${result.wind.speed}`
+
+    return str;
+
+}).addParam('location (city,state)', 'string');
+
 cbot.registerCommand('say', 'Say', 'Make the bot say something!', function(message, term) {
     message.channel.bulkDelete([message]);
 
