@@ -1,0 +1,15 @@
+{
+    "name": "cbot",
+    "version": "1.0.0",
+    "description": "Your Most Amazing Assistant",
+    "main": "bot.js",
+    "author": "crazyscouter",
+    "dependencies": {
+        "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+        "request": "^2.88.0",
+        "winston": "^3.2.1"
+    },
+    "scripts": {
+        "start": "node bot.js"
+    }
+}
