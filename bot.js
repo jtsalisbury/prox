@@ -1,6 +1,8 @@
 let Discord = require('discord.io');
 let logger = require('winston');
 
+let {evaluate} = require('mathjs');
+
 require('dotenv').config();
 
 let CommandHandler = require('./classes/CommandHandlerClass');
@@ -77,6 +79,12 @@ cbot.registerCommand('gimme', 'Gimme', 'Gimme a random meme', async function() {
 
     return `${res.title}\n${res.url}`;
 });
+
+cbot.registerCommand(['calculate', 'calc'], 'Calculate', 'Evaluate a math expression', function(user, expression) {
+    let result = evaluate(expression);
+
+    return expression + ' = ' + result;
+}).addParam('expression', 'string');
 
 let codes = ["ar", "bg", "zhCN", "zhTW", "hr", "cs", "da", "nl", "en", "et", "tl", "fi", "fr", "de", "el", "iw", "hi", "hu", "is", "id", "ga", "it", "ja", "ko", "la", "lv", "lt", "mk", "mt", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk", "si", "es", "sv", "th", "tr", "vi"];
 cbot.registerCommand("translate", "Translate", `Translate using keys from one lang to another\nCodes can be one of ${codes.join()}` , async function(msg, src, dest, text) {
