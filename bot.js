@@ -70,6 +70,10 @@ cbot.registerCommand("kys", 'Kill Yourself', 'OOf', function() {
     return ":cry: :gun:";
 });
 
+cbot.registerCommand('git', 'GitHub', 'View this on GitHub', function() {
+    return 'https://github.com/jtsalisbury/discord-cbot';
+});
+
 cbot.registerCommand('say', 'Say', 'Make the bot say something!', function(message, term) {
     message.channel.bulkDelete([message]);
 
