@@ -5,6 +5,7 @@ class Command {
         this.help = help;
         this.cback = callback;
         this.params = [];
+        this.restrictedTo = [];
     }
 
     addParam (name, type) {
@@ -15,7 +16,7 @@ class Command {
         });
 
         return this;
-    };
+    }
 
     setParamValue (name, newValue) {
         // Assign the parameter a value. This is used for execution
@@ -26,17 +27,31 @@ class Command {
                 this.params[i].value = newValue;
             }
         }
-    };
+    }
+
+    restrictTo (role) {
+        this.restrictedTo.push(role);
+
+        return this;
+    }
+
+    canExecute (roles) {
+        if (this.restrictedTo.length > 0) {
+            return roles.some(role => this.restrictedTo.includes(role.name));
+        }
+
+        return true;
+    }
 
     validate() {
         this.getParams().forEach(paramData => {
             if (paramData.value === null) {
-                throw new Error('Failed to find value for ' + paramName);
+                throw new Error('Failed to find value for ' + paramData.name);
             }
         });
 
         return true;
-    };
+    }
 
     resetParams() {
         let params = this.getParams();
@@ -45,7 +60,7 @@ class Command {
         }
     }
 
-    async execute (user) {
+    execute (message) {
         let paramValues = [];
         let params = this.getParams();
 
@@ -57,20 +72,24 @@ class Command {
         }
 
         // Execute the callback while spreading the parameter values
-        return await this.cback(user, ...paramValues);
-    };
+        return this.cback(message, ...paramValues);
+    }
 
     getName() {
         return this.prettyName;
-    };
+    }
 
     getHelp() {
         return this.help;
-    };
+    }
 
     getParams() {
         return this.params;
-    };
-};
+    }
+
+    getRestricted() {
+        return this.restrictedTo;
+    }
+}
 
 module.exports = Command;

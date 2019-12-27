@@ -8,7 +8,7 @@ let utils = {};
  * 
  * @returns {Promise} a promise which resolves to an object
  */
-utils.HTTPGet = async function(url, headers) {
+utils.HTTPGet = function(url, headers) {
     return new Promise((resolve, reject) => {
         // Create a enw request
         request.get({
@@ -19,7 +19,6 @@ utils.HTTPGet = async function(url, headers) {
             // Reject the promise if there's an error
             if (err) {
                 reject(err);
-                return;
             }
 
             // Return the resolved promise
@@ -35,7 +34,7 @@ utils.HTTPGet = async function(url, headers) {
  * 
  * @returns {Promise} a promise which resolves to an object
  */
-utils.HTTPPost = async function(url, payload) {
+utils.HTTPPost = function(url, payload) {
     return new Promise((resolve, reject) => {
         // Create a new request
         request.post(url, {
@@ -45,7 +44,6 @@ utils.HTTPPost = async function(url, payload) {
             // If there's an error reject the promise
             if (err) {
                 reject(err);
-                return;
             }
 
             // Resole to the body of the result
@@ -64,8 +62,8 @@ utils.parseLine = function (line) {
     let index = 0;
     let parts = [];
     let quotes = {
-        "\'": true,
-        '\"': true
+        "'": true,
+        '"': true
     }
     
     // While we are still within bounds..
@@ -77,16 +75,14 @@ utils.parseLine = function (line) {
 
         // If the current character is a space, keep going
         if (curChar === ' ') {
-            index++;
-            continue;
-        }
-
-        // Check to see if the current character is a quote (only will check beginning quotes)
-        if (quotes[curChar]) {
+            index += 1;
+        } else if (quotes[curChar]) {
             // So we are in a quote, let's search for the end quote
             let closingQuoteIndex = line.indexOf(curChar, index + 1);
-            let charsBetween = closingQuoteIndex - index - 1; // How many characters are between the quotes?
-            let quotedString = line.substr(index + 1, closingQuoteIndex !== -1 ? charsBetween : undefined); // Grab either the string between the quotes or all the way to the end of the string
+            // How many characters are between the quotes?
+            let charsBetween = closingQuoteIndex - index - 1; 
+            // Grab either the string between the quotes or all the way to the end of the string
+            let quotedString = line.substr(index + 1, closingQuoteIndex !== -1 ? charsBetween : undefined); 
             parts.push(quotedString); 
             // We can't find the closing quote, so we'll treat the remaining string as the quote
             if (closingQuoteIndex === -1) {
@@ -96,8 +92,10 @@ utils.parseLine = function (line) {
             index = closingQuoteIndex + 1;
         } else {
             // We didn't find a quote
-            let nextSpaceIndex = line.indexOf(' ', index + 1); // Find where the next space occurs
-            let charsBetween = nextSpaceIndex - index; // Grab the characters between the two spaces (a word!)
+            // Find where the next space occurs
+            let nextSpaceIndex = line.indexOf(' ', index + 1); 
+            // Grab the characters between the two spaces (a word!)
+            let charsBetween = nextSpaceIndex - index; 
             let word = line.substr(index, nextSpaceIndex !== -1 ? charsBetween : undefined)  
             parts.push(word);
             // We can't find another space, so we only have one word left!
