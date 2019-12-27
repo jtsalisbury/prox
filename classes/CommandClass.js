@@ -17,11 +17,8 @@ class Command {
         return this;
     };
 
-    getParams() {
-        return this.params;
-    };
-
     setParamValue (name, newValue) {
+        // Assign the parameter a value. This is used for execution
         for (let i in this.getParams()) {
             let paramData = this.params[i];
 
@@ -38,7 +35,7 @@ class Command {
             }
         });
 
-        return [true];
+        return true;
     };
 
     resetParams() {
@@ -48,16 +45,31 @@ class Command {
         }
     }
 
-    async execute () {
+    async execute (user) {
         let paramValues = [];
         let params = this.getParams();
+
+        // Generate a 1d array with the parameter values
         for (let paramName in params) {
             let paramData = params[paramName];
 
             paramValues.push(paramData.value);
         }
 
-        return await this.cback(...paramValues);
+        // Execute the callback while spreading the parameter values
+        return await this.cback(user, ...paramValues);
+    };
+
+    getName() {
+        return this.prettyName;
+    };
+
+    getHelp() {
+        return this.help;
+    };
+
+    getParams() {
+        return this.params;
     };
 };
 

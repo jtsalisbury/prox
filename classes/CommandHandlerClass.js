@@ -12,8 +12,10 @@ class CommandHandler {
             aliases = [aliases];
         }
 
+        // Create a new command object
         let cmd = new Command(aliases, name, help, cback);
 
+        // Register the same object for each alias
         aliases.forEach(alias => {
             this.commands[alias] = cmd;
         });
@@ -21,7 +23,20 @@ class CommandHandler {
         return cmd;
     };
 
-    async executeCommand(parsedLine) {
+    setActiveCommand (alias) {
+        if (this.isValidCommand(alias)) {
+            this.activeCommand = this.commands[alias];
+            return true;
+        } else {
+            throw new Error('No command found with that alias :&(');
+        }
+    };
+
+    convertToParamType (paramType, value) {
+        return value;
+    };
+
+    async executeCommand(user, parsedLine) {
         if (!this.activeCommand) {
             throw new Error('No active command');
         }
@@ -29,6 +44,7 @@ class CommandHandler {
         let parseIndex = 0;
         let params = this.activeCommand.getParams();
 
+        // First, assign each parameter for the command to a value
         params.forEach(paramData => {
             let curVal = parsedLine[parseIndex];
 
@@ -36,36 +52,37 @@ class CommandHandler {
                 throw new Error('Failed to find value for ' + paramData.name);
             }
 
+            // Convert it to an expected type
             let converted = this.convertToParamType(paramData.type, curVal);
 
             this.activeCommand.setParamValue(paramData.name, converted);
             parseIndex++;
         });
 
-        let validated = this.activeCommand.validate();
-        if (!validated[0]) {
-            return validated;
-        }
+        // Validate that each parameter has a value. This will throw if there's an error
+        this.activeCommand.validate();
 
-        let res = await this.activeCommand.execute();
+        // Finally, execute the command reset the parameters
+        let res = await this.activeCommand.execute(user);
+
         this.activeCommand.resetParams();
         this.activeCommand = null;
 
         return res;
     };
 
-    setActiveCommand (alias) {
-        if (this.commands[alias]) {
-            this.activeCommand = this.commands[alias];
-            return true;
-        } else {
-            return false;
-        }
+    isValidCommand (alias) {
+        return this.commands[alias] !== undefined;
     };
 
-    convertToParamType (paramType, value) {
-        return value;
+    getCommands() {
+        return this.commands;
     };
+
+    getCommand(alias) {
+        return this.commands[alias];
+    };
+
 };
 
 module.exports = CommandHandler;
