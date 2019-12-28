@@ -1,3 +1,5 @@
+let _utils = require('../utils/utils');
+
 let constructParamHelp = function(cmdObj) {
     let helpStr = "";
     
@@ -30,22 +32,22 @@ module.exports = function(bot) {
         let commands = bot.getCommands();
     
         // Generate a help string with the alias, help and param string
-        let helpStr = "A list of available commands can be found below.\nTo view parameters for a command, type !help <command alias>\n\n";
+        let helpStr = "To view parameters for a command, type !help <command alias>\n\n";
+        
         for (let cmdAlias in commands) {
             let cmdObj = commands[cmdAlias];
-            let paramHelp = constructParamHelp(cmdObj);
     
-            helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: !${cmdAlias} ${paramHelp}\n`;
+            helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: !${cmdAlias}\n`;
             
             let restrictions = cmdObj.getRestricted();
             if (restrictions.length > 0) {
                 helpStr += 'Restricted to: ' + restrictions.join(', ') + '\n';
             }
-    
+            
+            // Send individual messages since discord can't handle >2000 characters
             helpStr += '\n';
         }
-    
-        // Send a PM to the user
+
         message.member.send(helpStr);
     }
 

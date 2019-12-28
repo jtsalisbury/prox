@@ -82,28 +82,9 @@ client.on('message', async message => {
             if (response) {
                 message.channel.send(response);
             }
-            
         } catch (e) {
             // Error handling from all the way to the command scope
             message.channel.send(e.message);
         }
     }
 });
-
-/*
-let voteInfo = {};
-cbot.registerCommand('createVote', 'Create Vote', 'Create a new vote', function(user, title, options) {
-
-}).addParam('title', 'string').addParam('options', 'string');
-
-cbot.registerCommand('endVote', 'End Vote', 'Ends a vote', function(user) {
-
-}).addParam('voteId', 'number');
-
-cbot.registerCommand('endAllVotes', 'End All Vote', 'Ends all active votes', function(user) {
-
-});
-
-cbot.registerCommand('vote', 'Vote', 'Cast a ballot in an active vote!', function(user, option) {
-
-}).addParam('voteId', 'number').addParam('option', 'string');*/
