@@ -43,7 +43,7 @@ create.callback = function(message, text, option1, option2) {
         votedUsers: []
     };
 
-    return `A new vote has been created by <@${message.author.id}>\n**${text}**\nOption 1: ${option1}\nOption 2: ${option2}\nType !vote <option> to cast your ballot!`;
+    return `**New Vote**\nA new vote has been created by <@${message.author.id}>\n**${text}**\nOption 1: ${option1}\nOption 2: ${option2}\nType !vote <option> to cast your ballot!`;
 }
 
 let voteStr = function(voteObj) {
@@ -98,7 +98,7 @@ vote.callback = function(message, option) {
 
     voteObj.votedUsers.push(message.author.id);
 
-    return 'A new vote has been cast! Current results are:\n' + voteStr(voteObj);
+    return '**New Cast**\nA new vote has been cast! Current results are:\n' + voteStr(voteObj);
 };
 
 let deleteVote = {};
@@ -123,7 +123,7 @@ deleteVote.callback = function(message) {
         }
     }
 
-    return `The active vote has been ended!\n${voteStr(voteObj)}\nWinner: ${winner.text} - ${winner.votes} votes`;
+    return `**Vote Ended**\nThe active vote has been ended!\n${voteStr(voteObj)}\nWinner: ${winner.text} with ${winner.votes} votes`;
 };
 
 module.exports.commands = [create, vote, deleteVote];

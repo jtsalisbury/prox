@@ -1,5 +1,3 @@
-let _utils = require('../utils/utils');
-
 let constructParamHelp = function(cmdObj) {
     let helpStr = "";
     
