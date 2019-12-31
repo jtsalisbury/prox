@@ -20,7 +20,7 @@ weather.callback = async function(_, location) {
     let result = await _utils.HTTPGet(url, headers);
 
     if (result.cod === '404') {
-        throw new Error('Couldn\'t find that city! Try re-phrasing it :&(');
+        global.cbot.sendError('Couldn\'t find that city! Try re-phrasing it');
     }
 
     let temps = result.main;

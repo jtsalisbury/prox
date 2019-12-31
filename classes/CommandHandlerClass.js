@@ -1,8 +1,9 @@
 let Command = require('./CommandClass.js');
 
 class CommandHandler {
-    constructor() {
+    constructor(client) {
         this.commands = {};
+        this.client = client;
 
         this.activeCommand = null;
     }
@@ -29,12 +30,12 @@ class CommandHandler {
             this.activeCommand = this.commands[alias];
 
             if (!this.activeCommand.canExecute(message.member.roles)) {
-                throw new Error('You don\'t have permission to run this command!');
+                this.sendError('You don\'t have permission to run this command!');
             }
 
             return true;
         } else {
-            throw new Error('No command found with that alias :&(');
+            this.sendError('No command found with that alias');
         }
     }
 
@@ -48,7 +49,7 @@ class CommandHandler {
 
     async executeCommand(message, parsedLine) {
         if (!this.activeCommand) {
-            throw new Error('No active command');
+            this.sendError('No active command');
         }
 
         let parseIndex = 0;
@@ -59,7 +60,7 @@ class CommandHandler {
             let curVal = parsedLine[parseIndex];
 
             if (!curVal) {
-                throw new Error('Failed to find value for ' + paramData.name);
+                this.sendError('Failed to find value for ' + paramData.name);
             }
 
             // Convert it to an expected type
@@ -93,6 +94,13 @@ class CommandHandler {
         return this.commands[alias];
     }
 
+    sendError(str) {
+        throw new Error(str);
+    }
+
+    sendMessage(str, target) {
+        target.send(str);
+    }
 }
 
 module.exports = CommandHandler;

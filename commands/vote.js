@@ -24,7 +24,7 @@ create.callback = function(message, text, option1, option2) {
     let channelId = message.channel.id;
 
     if (voteInfo[channelId]) {
-        throw new Error('There\'s already an active vote in this channel! Finish that one first!');
+        global.cbot.sendError('There\'s already an active vote in this channel! Finish that one first!');
     }
 
     voteInfo[channelId] = {
@@ -43,7 +43,7 @@ create.callback = function(message, text, option1, option2) {
         votedUsers: []
     };
 
-    return `**New Vote**\nA new vote has been created by <@${message.author.id}>\n**${text}**\nOption 1: ${option1}\nOption 2: ${option2}\nType !vote <option> to cast your ballot!`;
+    return `--**New Vote**--\nA new vote has been created by <@${message.author.id}>\n**${text}**\nOption 1: ${option1}\nOption 2: ${option2}\nType !vote <option> to cast your ballot!`;
 }
 
 let voteStr = function(voteObj) {
@@ -74,11 +74,11 @@ vote.callback = function(message, option) {
     let voteObj = voteInfo[channelId];
     
     if (!voteInfo[channelId]) {
-        throw new Error('There\'s not an active vote! You should start one!');
+        global.cbot.sendError('There\'s not an active vote! You should start one!');
     }
 
     if (voteInfo[channelId].votedUsers.indexOf(message.author.id) > -1) {
-        throw new Error('You\'ve already voted in this vote!');
+        global.cbot.sendError('You\'ve already voted in this vote!');
     }
 
     if (option == '1') {
@@ -90,7 +90,7 @@ vote.callback = function(message, option) {
         if (optionObj) {
             optionObj.votes += 1;
         } else {
-            throw new Error('Invalid option!');
+            global.cbot.sendError('Invalid option!');
         }
     }
 
@@ -98,7 +98,7 @@ vote.callback = function(message, option) {
 
     voteObj.votedUsers.push(message.author.id);
 
-    return '**New Cast**\nA new vote has been cast! Current results are:\n' + voteStr(voteObj);
+    return '--**New Cast**--\nA new vote has been cast! Current results are:\n' + voteStr(voteObj);
 };
 
 let deleteVote = {};
@@ -110,7 +110,7 @@ deleteVote.callback = function(message) {
     let voteObj = voteInfo[message.channel.id];
 
     if (!voteObj) {
-        throw new Error('There\'s no active vote!')
+        global.cbot.sendError('There\'s no active vote!')
     }
 
     voteInfo[message.channel.id] = null;
@@ -123,7 +123,7 @@ deleteVote.callback = function(message) {
         }
     }
 
-    return `**Vote Ended**\nThe active vote has been ended!\n${voteStr(voteObj)}\nWinner: ${winner.text} with ${winner.votes} votes`;
+    return `--**Vote Ended**--\nThe active vote has been ended!\n${voteStr(voteObj)}\nWinner: ${winner.text} with ${winner.votes} votes`;
 };
 
 module.exports.commands = [create, vote, deleteVote];

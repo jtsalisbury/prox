@@ -16,7 +16,7 @@ define.callback = async function(_, term) {
     let def = result['list'][0];
 
     if (!def) {
-        return 'No definition found :&(';
+        global.cbot.sendError('No definition found');
     } else {
         return `Definition: ${def['definition']} \nExample: ${def['example']}`
     }
@@ -41,7 +41,7 @@ search.callback = async function(_, term) {
     let result = await _utils.HTTPGet(getUrl, headers);
 
     if (!result) {
-        return 'No results found :&(';
+        global.cbot.sendError( 'No results found');
     }
 
 	return `We found ${result.totalCount} results. The first one was ${result.value[0].url}`;

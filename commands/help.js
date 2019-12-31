@@ -33,7 +33,7 @@ help.callback = function(message) {
         helpStr += '\n';
     }
 
-    message.member.send(helpStr);
+    global.cbot.sendMessage(helpStr, message.member);
 }
 
 let cmdHelp = {};
@@ -51,7 +51,7 @@ cmdHelp.callback = function(message, command) {
     let helpStr = "A list of available commands can be found below.\n\n";
     
     if (!global.cbot.isValidCommand(command)) {
-        return 'No command found with that alias :&(';
+        return 'No command found with that alias';
     }
 
     // Generate the help string for this single command
@@ -66,7 +66,7 @@ cmdHelp.callback = function(message, command) {
     helpStr += '\n';
     
     // Send a PM to the user
-    message.member.send(helpStr);
+    global.cbot.sendMessage(helpStr, message.member);
 }
 
 module.exports.commands = [help, cmdHelp];

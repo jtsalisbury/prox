@@ -10,7 +10,7 @@ let logger = require('winston');
 let CommandHandler = require('./classes/CommandHandlerClass');
 let _utils = require('./utils/utils');
 
-global.cbot = new CommandHandler();
+global.cbot = new CommandHandler(client);
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
     let commands = null;
@@ -80,11 +80,11 @@ client.on('message', async message => {
 
             // If we should print a message
             if (response) {
-                message.channel.send(response);
+                global.cbot.sendMessage(response, message.channel);
             }
         } catch (e) {
             // Error handling from all the way to the command scope
-            message.channel.send(e.message);
+            global.cbot.sendMessage(e.message, message.channel + ' :&{');
         }
     }
 });
