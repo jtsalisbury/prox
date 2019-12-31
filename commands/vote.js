@@ -1,4 +1,4 @@
-let {ROLES} = require('../RoleConstants');
+let ROLES = require('../utils/utils').getRoles();
 
 let create = {};
 create.aliases = ['createvote'];

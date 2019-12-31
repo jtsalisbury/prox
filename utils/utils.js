@@ -1,4 +1,5 @@
 let request = require('request');
+let {ROLES} = require('../classes/RoleConstants');
 let utils = {};
 
 /**
@@ -109,5 +110,9 @@ utils.parseLine = function (line) {
 
     return parts;
 };
+
+utils.getRoles = function() {
+    return ROLES;
+}
 
 module.exports = utils;

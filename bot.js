@@ -10,20 +10,20 @@ let logger = require('winston');
 let CommandHandler = require('./classes/CommandHandlerClass');
 let _utils = require('./utils/utils');
 
-let cbot = new CommandHandler();
+global.cbot = new CommandHandler();
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
     let commands = null;
     if (typeof required === 'function') {
         // we need to pass the bot as an argument. the function should immediately return the commands
-        commands = required(cbot);
+        commands = required(global.cbot);
     } else {
         commands = required.commands;
     }
 
     // Loop through the commands and register them!
     commands.forEach(cmdData => {
-        let cmd = cbot.registerCommand(
+        let cmd = global.cbot.registerCommand(
             cmdData.aliases,
             cmdData.prettyName,
             cmdData.help,
@@ -75,8 +75,8 @@ client.on('message', async message => {
 
         // Set the active command and execute the handler
         try {
-            cbot.setActiveCommand(cmd, message);
-            let response = await cbot.executeCommand(message, parts);
+            global.cbot.setActiveCommand(cmd, message);
+            let response = await global.cbot.executeCommand(message, parts);
 
             // If we should print a message
             if (response) {
