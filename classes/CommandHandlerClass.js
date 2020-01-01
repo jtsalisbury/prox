@@ -71,7 +71,7 @@ class CommandHandler {
         });
 
         // Validate that each parameter has a value. This will throw if there's an error
-        this.activeCommand.validate();
+        this.activeCommand.validate(this);
 
         // Finally, execute the command reset the parameters
         let res = await this.activeCommand.execute(message);
@@ -92,6 +92,10 @@ class CommandHandler {
 
     getCommand(alias) {
         return this.commands[alias];
+    }
+
+    getClient() {
+        return this.client;
     }
 
     sendError(str) {

@@ -64,6 +64,10 @@ client.on('ready', function () {
 
 // We have a new message
 client.on('message', async message => {
+    if (message.author.bot) {
+        return;
+    }
+
     // Our client needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     let content = message.content;
@@ -84,7 +88,7 @@ client.on('message', async message => {
             }
         } catch (e) {
             // Error handling from all the way to the command scope
-            global.cbot.sendMessage(e.message, message.channel + ' :&{');
+        global.cbot.sendMessage(e.message + ' :&(', message.channel);
         }
     }
 });

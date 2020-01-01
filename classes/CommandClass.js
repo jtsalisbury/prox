@@ -6,6 +6,7 @@ class Command {
         this.cback = callback;
         this.params = [];
         this.restrictedTo = [];
+        this.permissions = [];
     }
 
     addParam (name, type) {
@@ -14,6 +15,12 @@ class Command {
             type: type,
             value: null
         });
+
+        return this;
+    }
+
+    addPermission (name) {
+        this.permissions.push(name);
 
         return this;
     }
@@ -43,10 +50,10 @@ class Command {
         return true;
     }
 
-    validate() {
+    validate(cbot) {
         this.getParams().forEach(paramData => {
             if (paramData.value === null) {
-                throw new Error('Failed to find value for ' + paramData.name);
+                cbot.sendError('Failed to find value for ' + paramData.name);
             }
         });
 
@@ -89,6 +96,10 @@ class Command {
 
     getRestricted() {
         return this.restrictedTo;
+    }
+
+    getPermissions() {
+        return this.permissions;
     }
 }
 
