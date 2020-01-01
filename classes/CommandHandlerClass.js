@@ -103,7 +103,9 @@ class CommandHandler {
     }
 
     sendMessage(str, target) {
-        target.send(str);
+        target.send(str, {
+            split: true
+        });
     }
 }
 

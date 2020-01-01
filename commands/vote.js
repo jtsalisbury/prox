@@ -82,9 +82,9 @@ vote.callback = function(message, option) {
     }
 
     if (option == '1') {
-        voteObj.options[0].vote += 1;
+        voteObj.options[0].votes += 1;
     } else if (option == '2') {
-        voteObj.options[1].vote += 1;
+        voteObj.options[1].votes += 1;
     } else {
         let optionObj = voteObj.options.find(obj => obj.text === option);
         if (optionObj) {
@@ -98,7 +98,7 @@ vote.callback = function(message, option) {
 
     voteObj.votedUsers.push(message.author.id);
 
-    return '--**New Cast**--\nA new vote has been cast! Current results are:\n' + voteStr(voteObj);
+    return '--**New Cast**--\nA new vote has been cast!\n' + voteStr(voteObj);
 };
 
 let deleteVote = {};
