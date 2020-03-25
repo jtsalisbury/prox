@@ -59,7 +59,7 @@ client.login(process.env.DISCORD_TOKEN);
 client.on('ready', function () {
     logger.info('Connected');
     logger.info('Logged in as: ');
-    logger.info(client.username + ' - (' + client.id + ')');
+    logger.info(client.user.username + ' - (' + client.user.id + ')');
 });
 
 // We have a new message
