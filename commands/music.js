@@ -123,11 +123,15 @@ volume.callback = function(message, volume) {
         global.cbot.sendError('Invalid number. Volume should be between 0 and 100');
     }
 
+    volume = Math.floor(volume);
+
     let guildId = message.guild.id;
     let queue = getServerQueue(guildId); // will error if there's no queue
-    
+
     queue.volume = volume;
     queue.dispatcher.setVolumeLogarithmic(volume / 100);
+
+    return `The volume has been set to **${volume}**`
 }
 
 let play = {};
@@ -381,4 +385,4 @@ getQueue.callback = function(message) {
     return queueStr
 }
 
-module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip];
+module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume];
