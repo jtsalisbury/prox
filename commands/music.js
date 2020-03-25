@@ -70,6 +70,7 @@ let playNextSong = function(guildId, channel) {
     dispatcher.on('error', err => {
         global.cbot.sendError(err);
     });
+    queue.dispatcher = dispatcher;
 
     // Print the next song
     let nextSong = '';
@@ -80,7 +81,7 @@ let playNextSong = function(guildId, channel) {
     }
 
     // Set the volume logarithmically
-    dispatcher.setVolumeLogarithmic(queue.volume / 5);
+    dispatcher.setVolumeLogarithmic(queue.volume / 100);
 
     global.cbot.sendMessage(`Now playing **${curSong.title}**\n${nextSong}`, channel);
 }
@@ -91,8 +92,9 @@ let createNewQueue = async function(message, songs) {
         textChannel: message.channel,
         voiceChannel: message.member.voiceChannel,
         connection: null,
+        dispatcher: null,
         songs: songs,
-        volume: 5,
+        volume: 50,
         playing: true
     };
 
@@ -106,6 +108,27 @@ let createNewQueue = async function(message, songs) {
     return queue;
 }
 
+let volume = {};
+volume.aliases = ['volume'];
+volume.prettyName = 'Set Volume';
+volume.help = 'Sets the music volume to a number between 0 and 100';
+volume.params = [
+    {
+        name: 'volume',
+        type: 'number'
+    }
+];
+volume.callback = function(message, volume) {
+    if (volume < 0 || volume > 100) {
+        global.cbot.sendError('Invalid number. Volume should be between 0 and 100');
+    }
+
+    let guildId = message.guild.id;
+    let queue = getServerQueue(guildId); // will error if there's no queue
+    
+    queue.volume = volume;
+    queue.dispatcher.setVolumeLogarithmic(volume / 100);
+}
 
 let play = {};
 play.aliases = ['play'];

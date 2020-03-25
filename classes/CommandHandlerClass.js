@@ -55,6 +55,13 @@ class CommandHandler {
         let parseIndex = 0;
         let params = this.activeCommand.getParams();
 
+        // More arguments than there are params
+        // Join the remaining arguments and mark it as the last param
+        if (parsedLine.length > params.length) {
+            let subset = parsedLine.slice(params.length - 1);
+            parsedLine[params.length - 1] = subset.join(' ');
+        }
+
         // First, assign each parameter for the command to a value
         params.forEach(paramData => {
             let curVal = parsedLine[parseIndex];

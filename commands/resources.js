@@ -18,7 +18,7 @@ define.callback = async function(_, term) {
     if (!def) {
         global.cbot.sendError('No definition found');
     } else {
-        return `Definition: ${def['definition']} \nExample: ${def['example']}`
+        return `Definition of ${term}: ${def['definition']} \nExample: ${def['example']}`
     }
 }
 
