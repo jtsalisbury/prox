@@ -66,10 +66,13 @@ class CommandHandler {
         params.forEach(paramData => {
             let curVal = parsedLine[parseIndex];
 
-            if (!curVal) {
+            if (!curVal && !paramData.optional) {
                 this.sendError('Failed to find value for ' + paramData.name);
+            } else if (!curVal && paramData.optional) {
+                parsedLine[parseIndex] = paramData.default || null;
+                curVal = parsedLine[parseIndex];
             }
-
+            
             // Convert it to an expected type
             let converted = this.convertToParamType(paramData.type, curVal);
 

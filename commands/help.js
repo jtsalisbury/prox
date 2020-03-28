@@ -2,7 +2,9 @@ let constructParamHelp = function(cmdObj) {
     let helpStr = "";
     
     cmdObj.getParams().forEach(param => {
-        helpStr += `<${param.name} (${param.type})> `;
+        let optText = param.optional ? 'optional, default: ' + (param.default == undefined ? 'nothing' : param.default) : 'required';
+
+        helpStr += `<${param.name} (${param.type}, ${optText})> `;
     });
 
     return helpStr;
@@ -22,7 +24,9 @@ help.callback = function(message) {
     for (let cmdAlias in commands) {
         let cmdObj = commands[cmdAlias];
 
-        helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: !${cmdAlias}\n`;
+        let paramHelp = constructParamHelp(cmdObj);
+
+        helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: !${cmdAlias} ${paramHelp}\n`;
         
         let restrictions = cmdObj.getRestricted();
         if (restrictions.length > 0) {

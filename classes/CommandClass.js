@@ -9,11 +9,13 @@ class Command {
         this.permissions = [];
     }
 
-    addParam (name, type) {
+    addParam (name, type, optional, def) {
         this.params.push({
             name: name,
             type: type,
-            value: null
+            value: null,
+            optional: optional,
+            default: def
         });
 
         return this;

@@ -14,11 +14,14 @@ global.cbot = new CommandHandler(client);
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
     let commands = null;
-    if (typeof required === 'function') {
+    if (typeof required.commands === 'function') {
         // we need to pass the bot as an argument. the function should immediately return the commands
-        commands = required(global.cbot);
+        commands = required.commands(global.cbot);
     } else {
         commands = required.commands;
+    }
+    if (required.addHooks) {
+        required.addHooks(global.cbot, client);
     }
 
     // Loop through the commands and register them!
@@ -33,7 +36,7 @@ glob.sync('./commands/*.js').forEach(file => {
         // Don't forget parameters!
         if (cmdData.params) {
             cmdData.params.forEach(paramData => {
-                cmd.addParam(paramData.name, paramData.type);
+                cmd.addParam(paramData.name, paramData.type, paramData.optional == undefined ? false : paramData.optional, paramData.default);
             });
         }
 
@@ -88,7 +91,7 @@ client.on('message', async message => {
             }
         } catch (e) {
             // Error handling from all the way to the command scope
-        global.cbot.sendMessage(e.message + ' :&(', message.channel);
+            global.cbot.sendMessage(e.message + ' :&(', message.channel);
         }
     }
 });

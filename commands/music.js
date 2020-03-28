@@ -83,10 +83,14 @@ let playNextSong = function(guildId, channel) {
     // Set the volume logarithmically
     dispatcher.setVolumeLogarithmic(queue.volume / 100);
 
-    global.cbot.sendMessage(`Now playing **${curSong.title}**\n${nextSong}`, channel);
+    global.cbot.sendMessage(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`, channel);
 }
 
-let createNewQueue = async function(message, songs) {
+let createNewQueue = async function(message, songs, volume) {
+    if (!volume) {
+        volume = 15;
+    }
+
     // Create a new queue object and add the song
     let queue = {
         textChannel: message.channel,
@@ -94,13 +98,15 @@ let createNewQueue = async function(message, songs) {
         connection: null,
         dispatcher: null,
         songs: songs,
-        volume: 50,
+        volume: volume,
         playing: true
     };
 
     // Try to join the voice channel
     let conn = await message.member.voiceChannel.join();
     queue.connection = conn;
+
+    message.member.voiceChannel.members.ob
 
     // Add the guild queue to the map
     serverQueues.set(message.guild.id, queue);
@@ -142,9 +148,14 @@ play.params = [
     {
         name: 'song link',
         type: 'string'
+    }, 
+    {
+        name: 'volume',
+        type: 'number',
+        optional: true
     }
 ];
-play.callback = async function(message, link) {
+play.callback = async function(message, link, volume) {
     verifyChannelPerms(message);
     
     // Determine whether we are dealing with a playlist or not
@@ -175,12 +186,16 @@ play.callback = async function(message, link) {
         // Update the queue to have the playing song at the beginning, the playlist of new songs, followed by the old queue
         queue.songs = [queue.songs[0]].concat(songs, queue.songs.slice(1));
         queue.connection.dispatcher.end();
+        
+        if (volume) { 
+            queue.volume = volume;
+        }
        
         return `Added ${songs.length} songs to the queue`;
     }
 
     // We need to create a new one!
-    await createNewQueue(message, songs);
+    await createNewQueue(message, songs, volume);
 
     // Play next song will pring messages for the bot
     playNextSong(message.guild.id, message.channel);
@@ -383,6 +398,27 @@ getQueue.callback = function(message) {
 
     // return string without last comma and space
     return queueStr
+}
+
+module.exports.addHooks = function(bot, discord) {
+    // Hook to see if we should stop playing music when everyone leaves the channel
+    discord.on("voiceStateUpdate", function(oldMember){
+        try {
+            let queue = getServerQueue(oldMember.guild.id); // will error if there's no queue
+
+            // Check to see if our user left a voice channel with the bot playing music
+            if (oldMember.voiceChannelID && queue && oldMember.voiceChannelID == queue.voiceChannel.id) {
+                // Our bot will be the only one playing songs 
+                if (oldMember.voiceChannel.members.size == 1) {
+                    queue.songs = [];
+                    
+                    bot.sendMessage('Everyone left the channel. Cleared the active queue and stopped playing all songs', queue.textChannel);
+                    
+                    queue.connection.dispatcher.end();
+                }
+            }
+        } catch(e) {}    
+    });
 }
 
 module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume];
