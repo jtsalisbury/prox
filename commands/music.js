@@ -204,7 +204,7 @@ play.callback = async function(message, link, volume) {
 }
 
 let enqueue = {};
-enqueue.aliases = ['enqueue'];
+enqueue.aliases = ['add', 'a'];
 enqueue.prettyName = 'Queue a Song';
 enqueue.help = 'Queue a song from YouTube';
 enqueue.params = [
@@ -258,7 +258,7 @@ enqueue.callback = async function(message, link) {
 }
 
 let dequeue = [];
-dequeue.aliases = ['dequeue'];
+dequeue.aliases = ['remove', 'r'];
 dequeue.prettyName = 'Dequeue Song';
 dequeue.help = 'Removes the next song from the queue';
 dequeue.callback = function(message) {
