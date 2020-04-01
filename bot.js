@@ -78,6 +78,10 @@ client.on('message', async message => {
         global.cbot.sendMessage("Don't cry you sad bitch! Cheer up! :beers:", message.channel);
     }
 
+    if (content.toLowerCase().includes('isiah')) {
+        global.cbot.sendMessage(':eggplant: :sweat_drops: :sweat_drops: ', message.channel);
+    }
+
     if (content.substring(0, 1) == '!') {
         let parts = _utils.parseLine(content.substr(1));
         let cmd = parts[0].toLowerCase();
