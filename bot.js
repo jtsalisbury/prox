@@ -74,6 +74,10 @@ client.on('message', async message => {
     // Our client needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     let content = message.content;
+    if (content == ':&(' || content == ':(') {
+        global.cbot.sendMessage("Don't cry you sad bitch! Cheer up! :beers:", message.channel);
+    }
+
     if (content.substring(0, 1) == '!') {
         let parts = _utils.parseLine(content.substr(1));
         let cmd = parts[0].toLowerCase();
