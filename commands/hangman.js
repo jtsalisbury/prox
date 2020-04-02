@@ -26,13 +26,13 @@ function startGame(guildId, word) {
     let game = getGame(guildId);
 
     // Change to lowercase
-    game.word = game.word.toLowerCase();
+    game.word = game.word;
 
     // Add each letter as required
     game.word = word;
     [...word].forEach(char => {
         if (char.match(/[a-z]/i)) {
-            game.requiredLetters[char] = false;        
+            game.requiredLetters[char.toLowerCase()] = false;        
         }
     })
 
@@ -114,7 +114,7 @@ function guess(message) {
     }
 
     // If the word equals the guess
-    if (message.content == game.word) {
+    if (message.content == game.word.toLowerCase()) {
         stopGame(message.guild.id);
         global.cbot.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
     } else if (game.requiredLetters[message.content] != undefined) {
