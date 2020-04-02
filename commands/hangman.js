@@ -1,11 +1,13 @@
 let gameQueue = new Map();
 
+// Returns the current game info for a server
 function getGame(guildId) {
     let game = gameQueue.get(guildId);
 
     return game;
 }
 
+// Create a new game for a server
 function newGame(message, startingUser) {
     let game = {
         guild: message.guild.id,
@@ -19,12 +21,17 @@ function newGame(message, startingUser) {
     gameQueue.set(message.guild.id, game);
 }
 
+// Start the game
 function startGame(guildId, word) {
     let game = getGame(guildId);
 
+    // Change to lowercase
+    game.word = game.word.toLowerCase();
+
+    // Add each letter as required
     game.word = word;
     [...word].forEach(char => {
-        if (char.match(/[A-Z|a-z|ü|é]/i)) {
+        if (char.match(/[a-z]/i)) {
             game.requiredLetters[char] = false;        
         }
     })
@@ -33,6 +40,7 @@ function startGame(guildId, word) {
     print(guildId);
 }
 
+// Stop the game
 function stopGame(guildId) {
     let game = getGame(guildId);
 
@@ -45,6 +53,7 @@ function stopGame(guildId) {
     gameQueue.delete(guildId);
 }
 
+// Print the hangman, guesses and the word
 function print(guildId) {
     let game = getGame(guildId);
 
@@ -52,6 +61,7 @@ function print(guildId) {
         return;
     }
 
+    // Format the hangman
     let wrong = Object.keys(game.guesses).length;
 
     let man = '     ——\n';
@@ -63,26 +73,32 @@ function print(guildId) {
     man +=    `        |\n`;
     man +=    `—————————`;
 
+    // Format the guesses
     let guesses = Object.keys(game.guesses).join(', ');
     let word = '';
 
+    // Format the word
     for (let i = 0; i < game.word.length; i++) {
         word += ' ';
 
         let letter = game.word[i];
 
+        // Determine whether we are dealing with a letter or not
         if (game.requiredLetters[letter] !== undefined) {
             if (game.requiredLetters[letter]) {
                 word += letter;
             } else {
+                // Print a slot for non-guessed letters
                 word += '_';
             }
         } else {
+            // Include non-letters
             word += letter;
         }
     }
     word = word.substr(1);
 
+    // Combine the message
     let combined = `\`\`\`${man}\`\`\`\`\`\`Guesses: ${guesses}\nPhrase: ${word}\`\`\``;
     global.cbot.sendMessage(combined, game.channel);
 }
@@ -90,16 +106,19 @@ function print(guildId) {
 function guess(message) {
     let game = getGame(message.guild.id);
 
+    // If we've already made an incorrect guess
     if (game.guesses[message.content]) {
         global.cbot.sendMessage('Somebody already guessed that!', message.channel);
         print(message.guild.id);
         return;
     }
 
+    // If the word equals the guess
     if (message.content == game.word) {
         stopGame(message.guild.id);
         global.cbot.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
     } else if (game.requiredLetters[message.content] != undefined) {
+        // If the guess is a required letter, determine if it's been guessed or not
         if (game.requiredLetters[message.content] == false) {
             global.cbot.sendMessage('Nice guess!', message.channel);
             game.requiredLetters[message.content] = true;
@@ -107,10 +126,12 @@ function guess(message) {
             global.cbot.sendMessage('Somebody already guessed that!', message.channel);
         }
     } else {
+        // Incorrect guess
         game.guesses[message.content] = true;
         global.cbot.sendMessage('Not quite!', message.channel);
     }
     
+    // Determine if all the letters have been guessed
     let allTrue = true;
     Object.values(game.requiredLetters).forEach(v => {
         if (v == false) {
@@ -123,6 +144,7 @@ function guess(message) {
         global.cbot.sendMessage('Congrats! You guessed the word!', message.channel);
     }
 
+    // We lost :$(
     if (Object.keys(game.guesses).length == 7) {
         stopGame(message.guild.id);
         global.cbot.sendMessage(`You've lost :&(`, message.channel);
@@ -137,7 +159,7 @@ hangman.prettyName = 'Hangman';
 hangman.help = 'Controls hangman';
 hangman.params = [
     {
-        name: 'action (start, end)',
+        name: 'action (create, stop)',
         type: 'string'
     }
 ];
@@ -155,12 +177,14 @@ hangman.callback = function(message, action) {
         stopGame(message.guild.id)
     }
 }
+
 module.exports.addHooks = function(bot, discord) {
     discord.on('message', message => {
         // check for a DM
         if (message.guild === null) {
             let user = message.author;
 
+            // Search for a game that hasn't started yet
             gameQueue.forEach((value, key) => {
                 if (value.startingUser == user && value.word == '') {
                     startGame(key, message.content);
@@ -169,9 +193,10 @@ module.exports.addHooks = function(bot, discord) {
         } else {
             let game = getGame(message.guild.id);
 
+            // Start the process of guessing if we are doing a character or the word
             if (game) {
                 if (message.content.length === 1 || message.content.length == game.word.length) {
-                    guess(message);
+                    guess(message.toLowerCase());
                 }
             }
         }
