@@ -31,7 +31,7 @@ function startGame(guildId, word) {
     // Add each letter as required
     game.word = word;
     [...word].forEach(char => {
-        if (char.match(/[a-z]/i)) {
+        if (char.match(/[A-Za-z]/i)) {
             game.requiredLetters[char.toLowerCase()] = false;        
         }
     })
@@ -81,12 +81,12 @@ function print(guildId) {
     for (let i = 0; i < game.word.length; i++) {
         word += ' ';
 
-        let letter = game.word[i];
+        let letter = game.word[i].toLowerCase();
 
         // Determine whether we are dealing with a letter or not
         if (game.requiredLetters[letter] !== undefined) {
             if (game.requiredLetters[letter]) {
-                word += letter;
+                word += game.word[i];
             } else {
                 // Print a slot for non-guessed letters
                 word += '_';
@@ -105,29 +105,30 @@ function print(guildId) {
 
 function guess(message) {
     let game = getGame(message.guild.id);
+    let guess = message.content.toLowerCase();
 
     // If we've already made an incorrect guess
-    if (game.guesses[message.content]) {
+    if (game.guesses[guess]) {
         global.cbot.sendMessage('Somebody already guessed that!', message.channel);
         print(message.guild.id);
         return;
     }
 
     // If the word equals the guess
-    if (message.content == game.word.toLowerCase()) {
+    if (guess == game.word.toLowerCase()) {
         stopGame(message.guild.id);
         global.cbot.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
-    } else if (game.requiredLetters[message.content] != undefined) {
+    } else if (game.requiredLetters[guess] != undefined) {
         // If the guess is a required letter, determine if it's been guessed or not
-        if (game.requiredLetters[message.content] == false) {
+        if (game.requiredLetters[guess] == false) {
             global.cbot.sendMessage('Nice guess!', message.channel);
-            game.requiredLetters[message.content] = true;
+            game.requiredLetters[guess] = true;
         } else {
             global.cbot.sendMessage('Somebody already guessed that!', message.channel);
         }
     } else {
         // Incorrect guess
-        game.guesses[message.content] = true;
+        game.guesses[guess] = true;
         global.cbot.sendMessage('Not quite!', message.channel);
     }
     
@@ -180,6 +181,10 @@ hangman.callback = function(message, action) {
 
 module.exports.addHooks = function(bot, discord) {
     discord.on('message', message => {
+        if (message.author.bot) {
+            return;
+        }
+
         // check for a DM
         if (message.guild === null) {
             let user = message.author;
@@ -195,8 +200,8 @@ module.exports.addHooks = function(bot, discord) {
 
             // Start the process of guessing if we are doing a character or the word
             if (game) {
-                if (message.content.length === 1 || message.content.length == game.word.length) {
-                    guess(message.toLowerCase());
+                if (guess.length === 1 || guess.length == game.word.length) {
+                    guess(message);
                 }
             }
         }
