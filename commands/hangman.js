@@ -15,7 +15,7 @@ function newGame(message, startingUser) {
         guesses: {},
         requiredLetters: {},
         startingUser: startingUser,
-        word: '',
+        word: ''
     }
 
     gameQueue.set(message.guild.id, game);

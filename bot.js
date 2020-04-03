@@ -81,6 +81,16 @@ client.on('message', async message => {
     if (content.toLowerCase().includes('isiah')) {
         global.cbot.sendMessage(':eggplant: :sweat_drops: :sweat_drops: ', message.channel);
     }
+    if (content.toLowerCase().includes('alcohol') || content.toLowerCase().includes('drink')) {
+        message.react('🍻');
+    }
+
+    if (message.author.username.toLowerCase().includes('isiah')) {
+        message.react('😍')
+    }
+    if (message.author.username.toLowerCase().includes('nhacks')) {
+        message.react('🍆');
+    }
 
     if (content.substring(0, 1) == '!') {
         let parts = _utils.parseLine(content.substr(1));
