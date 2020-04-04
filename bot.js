@@ -75,21 +75,7 @@ client.on('message', async message => {
     // It will listen for messages that will start with `!`
     let content = message.content;
     if (content == ':&(' || content == ':(') {
-        global.cbot.sendMessage("Don't cry you sad bitch! Cheer up! :beers:", message.channel);
-    }
-
-    if (content.toLowerCase().includes('isiah')) {
-        global.cbot.sendMessage(':eggplant: :sweat_drops: :sweat_drops: ', message.channel);
-    }
-    if (content.toLowerCase().includes('alcohol') || content.toLowerCase().includes('drink')) {
-        message.react('🍻');
-    }
-
-    if (message.author.username.toLowerCase().includes('isiah')) {
-        message.react('😍')
-    }
-    if (message.author.username.toLowerCase().includes('nhacks')) {
-        message.react('🍆');
+        global.cbot.sendMessage("Don't cry! Cheer up! :beers:", message.channel);
     }
 
     if (content.substring(0, 1) == '!') {
