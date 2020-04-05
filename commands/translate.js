@@ -22,7 +22,7 @@ translate.params = [
 ];
 translate.callback = async function(_, src, dest, text) {
 	if (codes.indexOf(src) === -1 || codes.indexOf(dest) === -1) {
-        global.cbot.sendError('Invalid language codes');
+       return 'Invalid language codes';
     }
 
     let url = "https://frengly.com/frengly/data/translateREST";

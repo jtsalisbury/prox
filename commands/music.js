@@ -1,4 +1,4 @@
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 const ytlist = require('youtube-playlist');
 
 // Master storage for all queues across servers
@@ -6,39 +6,25 @@ let serverQueues = new Map();
 
 let verifyChannelPerms = function(message) {
     // Verify that the user is in a voice channel
-    let voiceCh = message.member.voiceChannel;
+    let voiceCh = message.member.voice.channel;
     if (!voiceCh) {
-        global.cbot.sendError('You need to be in a voice channel to play music');
+        global.cbot.sendMessage('You need to be in a voice channel to play music', message.channel);
+        return;
     }
 
     // Check that we have the correct permissions
     let perms = voiceCh.permissionsFor(message.client.user);
     if (!perms.has('CONNECT') || !perms.has('SPEAK')) {
-        global.cbot.sendError('I need permission to join and speak here!');
+        global.cbot.sendMessage('I need permission to join and speak here!', message.channel);
+        return;
     }
 }
 
 let getServerQueue = function(guildId) {
-    let queue = serverQueues.get(guildId);
-    if (!queue) {
-        global.cbot.sendError('No active queue');
-    }
-
-    return queue;
+    return serverQueues.get(guildId);
 }
 
-let verifyChannelMembers = function(guildId) {
-    let queue = getServerQueue(guildId);
-
-    // If the only member is one, that means it's the bot, so leave the channel
-    if (queue.connection.channel.members.length === 1) {
-        queue.connection.channel.leave();
-        serverQueues.delete(guildId);
-        global.cbot.sendError('No members left in the channel, leaving');
-    }
-}
-
-let playNextSong = function(guildId, channel) {
+let playNextSong = async function(guildId, channel) {
     let queue = serverQueues.get(guildId);
 
     // If there's no more songs go ahead and leave
@@ -46,29 +32,24 @@ let playNextSong = function(guildId, channel) {
         queue.connection.channel.leave();
         serverQueues.delete(guildId);
 
-        global.cbot.sendError('No songs left in the queue, leaving');
+        global.cbot.sendMessage('No songs left in the queue, leaving', channel);
+        return;
     }
 
-    verifyChannelMembers(guildId);
     let curSong = queue.songs[0];
 
-    // Create a new download stream from YouTube
-    let stream = ytdl(curSong.url, {
-        filter: 'audioonly'
-    });
-    stream.on('error', err => {
-        global.cbot.sendError(err);
-    });
-
     // Create a new dispatcher to play our stream
-    let dispatcher = queue.connection.playStream(stream);
-    dispatcher.on('end', () => {
+    let dispatcher = queue.connection.play(await ytdl(curSong.url), { type: 'opus' });
+    dispatcher.on('finish', () => {
         queue.songs.shift();
 
         playNextSong(guildId, channel);
-    })
+    });
     dispatcher.on('error', err => {
-        global.cbot.sendError(err);
+        global.cbot.sendMessage('Dispatcher error: ' + err, channel);
+    });
+    dispatcher.on('debug', debugInfo => {
+        console.log(debugInfo);
     });
     queue.dispatcher = dispatcher;
 
@@ -94,7 +75,7 @@ let createNewQueue = async function(message, songs, volume) {
     // Create a new queue object and add the song
     let queue = {
         textChannel: message.channel,
-        voiceChannel: message.member.voiceChannel,
+        voiceChannel: message.member.voice.channel,
         connection: null,
         dispatcher: null,
         songs: songs,
@@ -103,10 +84,8 @@ let createNewQueue = async function(message, songs, volume) {
     };
 
     // Try to join the voice channel
-    let conn = await message.member.voiceChannel.join();
+    let conn = await message.member.voice.channel.join();
     queue.connection = conn;
-
-    message.member.voiceChannel.members.ob
 
     // Add the guild queue to the map
     serverQueues.set(message.guild.id, queue);
@@ -126,13 +105,16 @@ volume.params = [
 ];
 volume.callback = function(message, volume) {
     if (volume < 0 || volume > 100) {
-        global.cbot.sendError('Invalid number. Volume should be between 0 and 100');
+        return 'Invalid number. Volume should be between 0 and 100';
     }
 
     volume = Math.floor(volume);
 
     let guildId = message.guild.id;
-    let queue = getServerQueue(guildId); // will error if there's no queue
+    let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
 
     queue.volume = volume;
     queue.dispatcher.setVolumeLogarithmic(volume / 100);
@@ -185,7 +167,10 @@ play.callback = async function(message, link, volume) {
     if (queue) {
         // Update the queue to have the playing song at the beginning, the playlist of new songs, followed by the old queue
         queue.songs = [queue.songs[0]].concat(songs, queue.songs.slice(1));
-        queue.connection.dispatcher.end();
+
+        if (queue.connection && queue.connection.dispatcher) {
+            queue.connection.dispatcher.end();
+        }
         
         if (volume) { 
             queue.volume = volume;
@@ -267,9 +252,12 @@ dequeue.callback = function(message) {
     verifyChannelPerms(message);
 
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
 
     if (queue.songs.length === 1) {
-        global.cbot.sendError('There are no songs in the queue');
+        return 'There are no songs in the queue';
     }
 
     // Current song is still at index 0, so remove index 1
@@ -297,6 +285,10 @@ skip.callback = function(message) {
 
     // Go ahead and end the current stream. This will trigger moving to the next song in the queue.
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
     queue.connection.dispatcher.end();
 }
 
@@ -311,6 +303,10 @@ stop.callback = function(message) {
 
     // Empty the queue and end the stream, this will delete the queue
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
     queue.songs = [];
     queue.connection.dispatcher.end();
 
@@ -328,6 +324,10 @@ clear.callback = function(message) {
 
     // Empty the queue
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
     queue.songs = [];
 
     return 'Cleared the queue';
@@ -344,6 +344,10 @@ pause.callback = function(message) {
 
     // Pause the stream
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
     queue.connection.dispatcher.pause();
 
     return 'The stream has been paused';
@@ -360,10 +364,14 @@ resume.callback = function(message) {
 
     // Resume the stream if it's paused
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
     if (queue.connection.dispatcher.paused) {
         queue.connection.dispatcher.resume();
     } else {
-        global.cbot.sendError('The stream isn\'t paused');
+        return 'The stream isn\'t paused';
     }
 
     return 'The stream has been resumed';
@@ -380,6 +388,10 @@ getQueue.callback = function(message) {
     
     // Grab the queue
     let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
     let queueStr = '';
     if (queue.songs.length > 1) {
         // Loop through the queue so long as we are below five and we have a song
@@ -404,19 +416,22 @@ module.exports.addHooks = function(bot, discord) {
     // Hook to see if we should stop playing music when everyone leaves the channel
     discord.on("voiceStateUpdate", function(oldMember){
         try {
-            let queue = getServerQueue(oldMember.guild.id); // will error if there's no queue
+            let queue = getServerQueue(oldMember.guild.id);
+            if (!queue) {
+                bot.sendMessage('No active queue', queue.textChannel);
+                return;
+            }
 
             // Check to see if our user left a voice channel with the bot playing music
-            if (oldMember.voiceChannelID && queue && oldMember.voiceChannelID == queue.voiceChannel.id) {
-                // Our bot will be the only one playing songs 
-                if (oldMember.voiceChannel.members.size == 1) {
-                    queue.songs = [];
-                    
-                    bot.sendMessage('Everyone left the channel. Cleared the active queue and stopped playing all songs', queue.textChannel);
-                    
-                    queue.connection.dispatcher.end();
-                }
+            // Our bot will be the only one playing songs 
+            if (queue.voiceChannel.members.size == 1) {
+                queue.songs = [];
+                
+                bot.sendMessage('Everyone left the channel. Cleared the active queue and stopped playing all songs', queue.textChannel);
+                
+                queue.connection.dispatcher.end();
             }
+            
         } catch(e) {}    
     });
 }

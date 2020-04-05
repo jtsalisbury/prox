@@ -24,7 +24,7 @@ create.callback = function(message, text, option1, option2) {
     let channelId = message.channel.id;
 
     if (voteInfo[channelId]) {
-        global.cbot.sendError('There\'s already an active vote in this channel! Finish that one first!');
+        return 'There\'s already an active vote in this channel! Finish that one first!';
     }
 
     voteInfo[channelId] = {
@@ -74,11 +74,11 @@ vote.callback = function(message, option) {
     let voteObj = voteInfo[channelId];
     
     if (!voteInfo[channelId]) {
-        global.cbot.sendError('There\'s not an active vote! You should start one!');
+       return 'There\'s not an active vote! You should start one!';
     }
 
     if (voteInfo[channelId].votedUsers.indexOf(message.author.id) > -1) {
-        global.cbot.sendError('You\'ve already voted in this vote!');
+        return 'You\'ve already voted in this vote!';
     }
 
     if (option == '1') {
@@ -90,7 +90,7 @@ vote.callback = function(message, option) {
         if (optionObj) {
             optionObj.votes += 1;
         } else {
-            global.cbot.sendError('Invalid option!');
+            return 'Invalid option!';
         }
     }
 
@@ -110,7 +110,7 @@ deleteVote.callback = function(message) {
     let voteObj = voteInfo[message.channel.id];
 
     if (!voteObj) {
-        global.cbot.sendError('There\'s no active vote!')
+        return 'There\'s no active vote!';
     }
 
     voteInfo[message.channel.id] = null;

@@ -48,7 +48,7 @@ say.callback = function(message, string) {
     message.channel.bulkDelete([message]);
 
     if (string.indexOf('!') > -1) {
-        global.cbot.sendError('You can\'t send a message to call another command!');
+        return 'You can\'t send a message to call another command!';
     }
 
     return string;

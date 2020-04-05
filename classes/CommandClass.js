@@ -52,16 +52,6 @@ class Command {
         return true;
     }
 
-    validate(cbot) {
-        this.getParams().forEach(paramData => {
-            if (paramData.value === null) {
-                cbot.sendError('Failed to find value for ' + paramData.name);
-            }
-        });
-
-        return true;
-    }
-
     resetParams() {
         let params = this.getParams();
         for (let i in params) {
@@ -69,7 +59,7 @@ class Command {
         }
     }
 
-    execute (message) {
+    async execute (message) {
         let paramValues = [];
         let params = this.getParams();
 
@@ -81,7 +71,7 @@ class Command {
         }
 
         // Execute the callback while spreading the parameter values
-        return this.cback(message, ...paramValues);
+        return await this.cback(message, ...paramValues);
     }
 
     getName() {

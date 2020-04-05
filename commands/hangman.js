@@ -41,14 +41,15 @@ function startGame(guildId, word) {
 }
 
 // Stop the game
-function stopGame(guildId) {
+function stopGame(guildId, channel) {
     let game = getGame(guildId);
 
     if (!game) {
-        global.cbot.sendError('No hangman game is running!');
+        global.cbot.sendMessage('No hangman game is running', channel);
+        return;
     }
 
-    global.cbot.sendMessage(`The hangman game has ended. The word was: ${game.word}`, game.channel);
+    global.cbot.sendMessage(`The hangman game has ended. The word was: ${game.word}`, channel);
 
     gameQueue.delete(guildId);
 }
@@ -116,7 +117,7 @@ function guess(message) {
 
     // If the word equals the guess
     if (guess == game.word.toLowerCase()) {
-        stopGame(message.guild.id);
+        stopGame(message.guild.id, message.channel);
         global.cbot.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
     } else if (game.requiredLetters[guess] != undefined) {
         // If the guess is a required letter, determine if it's been guessed or not
@@ -141,13 +142,13 @@ function guess(message) {
     })
 
     if (allTrue) {
-        stopGame(message.guild.id);
+        stopGame(message.guild.id, message.channel);
         global.cbot.sendMessage('Congrats! You guessed the word!', message.channel);
     }
 
     // We lost :$(
     if (Object.keys(game.guesses).length == 7) {
-        stopGame(message.guild.id);
+        stopGame(message.guild.id, message.channel);
         global.cbot.sendMessage(`You've lost :&(`, message.channel);
     }
 
@@ -167,15 +168,15 @@ hangman.params = [
 hangman.callback = function(message, action) {
     if (action == 'create') {
         if (getGame(message.guild.id)) {
-            global.cbot.sendError('A hangman game is already going on!');
+            return 'A hangman game is already going on!';
         }
 
         newGame(message, message.author);
 
         global.cbot.sendMessage('Okay, let\'s get this game started! I need you to send me the word you want to use', message.author);
-        global.cbot.sendMessage(`Alright <@${message.author.id}>, I've sent you a DM. Please respond there to start the game!`, message.channel);
+        return `Alright <@${message.author.id}>, I've sent you a DM. Please respond there to start the game!`;
     } else if (action == 'stop') {
-        stopGame(message.guild.id)
+        stopGame(message.guild.id, message.channel)
     }
 }
 
@@ -200,7 +201,7 @@ module.exports.addHooks = function(bot, discord) {
 
             // Start the process of guessing if we are doing a character or the word
             if (game) {
-                if (guess.length === 1 || guess.length == game.word.length) {
+                if (message.content.length === 1 || message.content.length === game.word.length) {
                     guess(message);
                 }
             }

@@ -29,13 +29,15 @@ class CommandHandler {
         if (this.isValidCommand(alias)) {
             this.activeCommand = this.commands[alias];
 
-            if (!this.activeCommand.canExecute(message.member.roles)) {
-                this.sendError('You don\'t have permission to run this command!');
+            if (!this.activeCommand.canExecute(message.member.roles._roles)) {
+                this.sendMessage('You don\'t have permission to run this command!', message.channel);
+                return false;
             }
 
             return true;
         } else {
-            this.sendError('No command found with that alias');
+            this.sendMessage('No command found with that alias', message.channel);
+            return false;
         }
     }
 
@@ -49,7 +51,8 @@ class CommandHandler {
 
     async executeCommand(message, parsedLine) {
         if (!this.activeCommand) {
-            this.sendError('No active command');
+            this.sendMessage('No active command', message.channel);
+            return false;
         }
 
         let parseIndex = 0;
@@ -63,11 +66,13 @@ class CommandHandler {
         }
 
         // First, assign each parameter for the command to a value
+        let validParams = true;
         params.forEach(paramData => {
             let curVal = parsedLine[parseIndex];
 
             if (!curVal && !paramData.optional) {
-                this.sendError('Failed to find value for ' + paramData.name);
+                this.sendMessage('Failed to find value for ' + paramData.name, message.channel);
+                validParams = false;
             } else if (!curVal && paramData.optional) {
                 parsedLine[parseIndex] = paramData.default || null;
                 curVal = parsedLine[parseIndex];
@@ -80,16 +85,19 @@ class CommandHandler {
             parseIndex += 1;
         });
 
-        // Validate that each parameter has a value. This will throw if there's an error
-        this.activeCommand.validate(this);
+        if (!validParams) {
+            return;
+        }
 
         // Finally, execute the command reset the parameters
+        
         let res = await this.activeCommand.execute(message);
 
         this.activeCommand.resetParams();
         this.activeCommand = null;
 
         return res;
+        
     }
 
     isValidCommand (alias) {
@@ -106,10 +114,6 @@ class CommandHandler {
 
     getClient() {
         return this.client;
-    }
-
-    sendError(str) {
-        throw new Error(str);
     }
 
     sendMessage(str, target) {

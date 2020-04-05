@@ -85,17 +85,15 @@ client.on('message', async message => {
         parts.shift();
 
         // Set the active command and execute the handler
-        try {
-            global.cbot.setActiveCommand(cmd, message);
-            let response = await global.cbot.executeCommand(message, parts);
+        if (!global.cbot.setActiveCommand(cmd, message)) {
+            return;
+        }
+        
+        let response = await global.cbot.executeCommand(message, parts);
 
-            // If we should print a message
-            if (response) {
-                global.cbot.sendMessage(response, message.channel);
-            }
-        } catch (e) {
-            // Error handling from all the way to the command scope
-            global.cbot.sendMessage(e.message + ' :&(', message.channel);
+        // If we should print a message
+        if (response) {
+            global.cbot.sendMessage(response, message.channel);
         }
     }
 });

@@ -18,10 +18,10 @@ kick.roles = [ROLES.ADMIN, ROLES.MOD];
 kick.callback = async function(message, target, reason) {
     let member = message.mentions.members.first() || message.guild.members.get(target);
     if (!member) {
-        global.cbot.sendError('Not a valid member!');
+        return 'Not a valid member';
     }
     if (!member.kickable) {
-        global.cbot.sendError('This user can\'t be kicked');
+        return 'This user can\'t be kicked';
     }
 
     await member.kick(reason);
@@ -42,7 +42,7 @@ purge.params = [
 purge.roles = [ROLES.ADMIN, ROLES.MOD];
 purge.callback = async function(message, count) {
     if (count < 2 || count > 100) {
-        global.cbot.sendError('Please provide a number between 2 and 100');
+        return 'Please provide a number between 2 and 100';
     }
 
     let messages = await message.channel.fetchMessages({limit: count});
