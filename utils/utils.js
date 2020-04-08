@@ -23,7 +23,12 @@ utils.HTTPGet = function(url, headers) {
             }
 
             // Return the resolved promise
-            resolve(JSON.parse(body));
+            try {
+                let res = JSON.parse(body);
+                resolve(res);
+            } catch(e) { // if it's not a json result
+                resolve(body);
+            }
         });
     });
 };

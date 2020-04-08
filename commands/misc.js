@@ -54,4 +54,31 @@ say.callback = function(message, string) {
     return string;
 }
 
-module.exports.commands = [ping, kys, git, gimme, say];
+let insult = {};
+insult.aliases = ['insult'];
+insult.prettyName = 'Insult';
+insult.help = 'Generate an insult';
+insult.params = [
+    {
+        name: 'user',
+        type: 'string',
+        optional: true
+    }
+];
+insult.callback = async function(message, user) {
+    // Grab insult
+    let res = await _utils.HTTPGet('https://insult.mattbas.org/api/insult');
+
+    // Determine if a user was passed
+    if (message.mentions.users.size > 0) {
+        let id = message.mentions.users.values().next().value.id;
+
+        res = '<@' + id + '>, ' + res.charAt(0).toLowerCase() + res.substring(1);
+    } else if (user) {
+        res = user + ', ' + res.charAt(0).toLowerCase() + res.substring(1);
+    }
+
+    return res;
+}
+
+module.exports.commands = [ping, kys, git, gimme, say, insult];
