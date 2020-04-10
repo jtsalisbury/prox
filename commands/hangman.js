@@ -21,6 +21,19 @@ function newGame(message, startingUser) {
     gameQueue.set(message.guild.id, game);
 }
 
+function validateWord(word) {
+    let valid = false;
+
+    // Look for at least one valid character
+    [...word].forEach(char => {
+        if (char.match(/[A-Za-z]/i)) {
+            valid = true;
+        }
+    })
+
+    return valid;
+}
+
 // Start the game
 function startGame(guildId, word) {
     let game = getGame(guildId);
@@ -193,7 +206,11 @@ module.exports.addHooks = function(bot, discord) {
             // Search for a game that hasn't started yet
             gameQueue.forEach((value, key) => {
                 if (value.startingUser == user && value.word == '') {
-                    startGame(key, message.content);
+                    if (validateWord(message.content)) {
+                        startGame(key, message.content);
+                    } else {
+                        global.cbot.sendMessage('That word isn\'t valid! We need at least one character', message.author);
+                    }
                 }
             })
         } else {
