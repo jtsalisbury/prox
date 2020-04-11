@@ -43,7 +43,12 @@ let playNextSong = async function(guildId, channel) {
     let curSong = queue.songs[0];
 
     // Create a new dispatcher to play our stream
-    let dispatcher = queue.connection.play(await ytdl(curSong.url), { type: 'opus' });
+    let stream = await ytdl(curSong.url, {
+        highWaterMark: 2500000,
+        filter: 'audioandvideo' 
+    });
+
+    let dispatcher = queue.connection.play(stream, { type: 'opus' });
     dispatcher.on('finish', (reason) => {
         queue.songs.shift();
 
