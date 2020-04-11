@@ -71,11 +71,7 @@ let playNextSong = async function(guildId, channel) {
     global.cbot.sendMessage(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`, channel);
 }
 
-let createNewQueue = async function(message, songs, volume) {
-    if (!volume) {
-        volume = 15;
-    }
-
+let createNewQueue = async function(message, songs) {
     // Create a new queue object and add the song
     let queue = {
         textChannel: message.channel,
@@ -83,7 +79,7 @@ let createNewQueue = async function(message, songs, volume) {
         connection: null,
         dispatcher: null,
         songs: songs,
-        volume: volume,
+        volume: 15,
         playing: true
     };
 
@@ -184,14 +180,9 @@ play.params = [
     {
         name: 'link/search criteria',
         type: 'string'
-    }, 
-    {
-        name: 'volume',
-        type: 'number',
-        optional: true
     }
 ];
-play.callback = async function(message, descriptor, volume) {
+play.callback = async function(message, descriptor) {
     verifyChannelPerms(message);
 
     let songs = await getSongs(descriptor);    
@@ -205,16 +196,12 @@ play.callback = async function(message, descriptor, volume) {
         if (queue.connection && queue.connection.dispatcher) {
             queue.connection.dispatcher.end();
         }
-        
-        if (volume) { 
-            queue.volume = volume;
-        }
-       
+
         return `Added ${songs.length} songs to the queue`;
     }
 
     // We need to create a new one!
-    await createNewQueue(message, songs, volume);
+    await createNewQueue(message, songs);
 
     // Play next song will pring messages for the bot
     playNextSong(message.guild.id, message.channel);
