@@ -20,6 +20,8 @@
         "request": "^2.88.2",
         "winston": "^3.2.1",
         "youtube-playlist": "^1.0.2",
+        "youtube-search": "^1.1.4",
+        "ytdl-core": "^2.0.1",
         "ytdl-core-discord": "^1.1.0"
     },
     "scripts": {

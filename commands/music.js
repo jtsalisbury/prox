@@ -1,5 +1,9 @@
 const ytdl = require('ytdl-core-discord');
 const ytlist = require('youtube-playlist');
+const ytsearch = require('youtube-search');
+const utils = require('util');
+
+const ytsearchProm = utils.promisify(ytsearch);
 
 // Master storage for all queues across servers
 let serverQueues = new Map();
@@ -40,7 +44,7 @@ let playNextSong = async function(guildId, channel) {
 
     // Create a new dispatcher to play our stream
     let dispatcher = queue.connection.play(await ytdl(curSong.url), { type: 'opus' });
-    dispatcher.on('finish', () => {
+    dispatcher.on('finish', (reason) => {
         queue.songs.shift();
 
         playNextSong(guildId, channel);
@@ -122,13 +126,63 @@ volume.callback = function(message, volume) {
     return `The volume has been set to **${volume}**`
 }
 
+async function getSongs(descriptor) {
+    let link = '';
+    if (descriptor.indexOf('youtube') === -1 && descriptor.indexOf('soundcloud') === -1) {
+        let opts = {
+            maxResults: 1,
+            key: process.env.YOUTUBE_API
+        }
+        
+        let result = await ytsearchProm(descriptor, opts).catch(err => {
+            console.log(err);
+        });
+
+        if (result.length === 1) {
+            link = result[0].link;
+        }
+    }
+    
+    let songs = [];
+
+    // YouTube link
+    if (link.indexOf('youtube') !== -1) {
+        
+        // Determine whether we are dealing with a playlist or not
+        if (link.indexOf('&list=') !== -1) {
+            // Query YouTube to get all the songs in the playlist
+            let result = await ytlist(link, ['name', 'url']);
+            result.data.playlist.forEach(obj => {
+                songs.push({
+                    title: obj.name,
+                    url: obj.url
+                });
+            })
+        } else {
+            // Grab the info for our one song we want to add
+            let songInfo = await ytdl.getInfo(link);
+            songs = [
+                {
+                    title: songInfo.title,
+                    url: songInfo.video_url
+                }
+            ];
+        }
+    } else {
+        // TODO: SoundCloud support
+        return [];
+    }
+
+    return songs;
+}
+
 let play = {};
 play.aliases = ['play'];
 play.prettyName = 'Play Song';
-play.help = 'Stops the current song and plays a new one; maintains active queue';
+play.help = 'Stops the current song and plays a new one; maintains active queue. Can provide a YouTube/SoundCloud link, or search words for either platform';
 play.params = [
     {
-        name: 'song link',
+        name: 'link/search criteria',
         type: 'string'
     }, 
     {
@@ -137,30 +191,10 @@ play.params = [
         optional: true
     }
 ];
-play.callback = async function(message, link, volume) {
+play.callback = async function(message, descriptor, volume) {
     verifyChannelPerms(message);
-    
-    // Determine whether we are dealing with a playlist or not
-    let songs = [];
-    if (link.indexOf('&list=') !== -1) {
-        // Query YouTube to get all the songs in the playlist
-        let result = await ytlist(link, ['name', 'url']);
-        result.data.playlist.forEach(obj => {
-            songs.push({
-                title: obj.name,
-                url: obj.url
-            });
-        })
-    } else {
-        // Grab the info for our one song we want to add
-        let songInfo = await ytdl.getInfo(link);
-        songs = [
-            {
-                title: songInfo.title,
-                url: songInfo.video_url
-            }
-        ];
-    }
+
+    let songs = await getSongs(descriptor);    
 
     // If there's a server queue add the song
     let queue = serverQueues.get(message.guild.id);
@@ -194,34 +228,14 @@ enqueue.prettyName = 'Queue a Song';
 enqueue.help = 'Queue a song from YouTube';
 enqueue.params = [
     {
-        name: 'song link',
+        name: 'link/search criteria',
         type: 'string'
     }
 ];
-enqueue.callback = async function(message, link) {
+enqueue.callback = async function(message, descriptor) {
     verifyChannelPerms(message);
 
-    // Determine whether we are in a playlist
-    let songs = [];
-    if (link.indexOf('&list=') !== -1) {
-        // Query YouTube to get all the songs in the playlist
-        let result = await ytlist(link, ['name', 'url']);
-        result.data.playlist.forEach(obj => {
-            songs.push({
-                title: obj.name,
-                url: obj.url
-            });
-        })
-    } else {
-        // Grab the info for our one song we want to add
-        let songInfo = await ytdl.getInfo(link);
-        songs = [
-            {
-                title: songInfo.title,
-                url: songInfo.video_url
-            }
-        ];
-    }
+    let songs = await getSongs(descriptor);    
 
     // If there's a server queue add the song
     let queue = serverQueues.get(message.guild.id);
