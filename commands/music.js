@@ -128,7 +128,7 @@ volume.callback = function(message, volume) {
 }
 
 async function getSongs(descriptor) {
-    let link = '';
+    let link = descriptor;
     if (descriptor.indexOf('youtube') === -1 && descriptor.indexOf('soundcloud') === -1) {
         let opts = {
             maxResults: 1,
