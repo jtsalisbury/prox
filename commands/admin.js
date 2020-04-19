@@ -1,4 +1,4 @@
-let ROLES = require('../utils/utils').getRoles();
+let ROLES = require('@services/utils').getRoles();
 
 let kick = {};
 kick.aliases = ['kick'];

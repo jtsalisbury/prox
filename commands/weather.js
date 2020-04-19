@@ -1,4 +1,4 @@
-let _utils = require('../utils/utils');
+let _utils = require('@services/utils');
 
 let weather = {};
 weather.aliases = ['weather'];

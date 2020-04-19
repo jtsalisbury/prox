@@ -1,11 +1,11 @@
-let Command = require('./CommandClass.js');
+let Command = require('@models/Command.js');
+let GuildManager = require('@models/GuildManager');
 
 class CommandHandler {
-    constructor(client) {
+    constructor() {
         this.commands = {};
-        this.client = client;
 
-        this.activeCommand = null;
+        this.activeCommand = null; 
     }
 
     registerCommand (aliases, name, help, cback) {
@@ -90,7 +90,6 @@ class CommandHandler {
         }
 
         // Finally, execute the command reset the parameters
-        
         let res = await this.activeCommand.execute(message);
 
         this.activeCommand.resetParams();
@@ -111,16 +110,6 @@ class CommandHandler {
     getCommand(alias) {
         return this.commands[alias];
     }
-
-    getClient() {
-        return this.client;
-    }
-
-    sendMessage(str, target) {
-        target.send(str, {
-            split: true
-        });
-    }
 }
 
-module.exports = CommandHandler;
+module.exports = new CommandHandler();

@@ -1,3 +1,5 @@
+let CommandHandler = require('@models/CommandHandler');
+
 let gameQueue = new Map();
 
 // Returns the current game info for a server
@@ -49,7 +51,7 @@ function startGame(guildId, word) {
         }
     })
 
-    global.cbot.sendMessage('Okay, here we go! You can guess by sending a single letter, or you can try to guess the whole word.', game.channel);
+    game.channel.send('Okay, here we go! You can guess by sending a single letter, or you can try to guess the whole word');
     print(guildId);
 }
 
@@ -58,11 +60,11 @@ function stopGame(guildId, channel) {
     let game = getGame(guildId);
 
     if (!game) {
-        global.cbot.sendMessage('No hangman game is running', channel);
+        channel.send('No hangman game is running');
         return;
     }
 
-    global.cbot.sendMessage(`The hangman game has ended. The word was: ${game.word}`, channel);
+    channel.send(`The hangman game has ended. The word was: ${game.word}`);
 
     gameQueue.delete(guildId);
 }
@@ -114,7 +116,7 @@ function print(guildId) {
 
     // Combine the message
     let combined = `\`\`\`${man}\`\`\`\`\`\`Guesses: ${guesses}\nPhrase: ${word}\`\`\``;
-    global.cbot.sendMessage(combined, game.channel);
+    game.channel.send(combined, { split: true });
 }
 
 function guess(message) {
@@ -123,7 +125,7 @@ function guess(message) {
 
     // If we've already made an incorrect guess
     if (game.guesses[guess]) {
-        global.cbot.sendMessage('Somebody already guessed that!', message.channel);
+        message.channel.send('Somebody already guessed that!');
         print(message.guild.id);
         return;
     }
@@ -131,19 +133,19 @@ function guess(message) {
     // If the word equals the guess
     if (guess == game.word.toLowerCase()) {
         stopGame(message.guild.id, message.channel);
-        global.cbot.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
+        message.channel.send(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`);
     } else if (game.requiredLetters[guess] != undefined) {
         // If the guess is a required letter, determine if it's been guessed or not
         if (game.requiredLetters[guess] == false) {
-            global.cbot.sendMessage('Nice guess!', message.channel);
+            message.channel.send('Nice guess!');
             game.requiredLetters[guess] = true;
         } else {
-            global.cbot.sendMessage('Somebody already guessed that!', message.channel);
+            message.channel.send('Somebody already guessed that!');
         }
     } else {
         // Incorrect guess
         game.guesses[guess] = true;
-        global.cbot.sendMessage('Not quite!', message.channel);
+        message.channel.send('Not quite!');
     }
     
     // Determine if all the letters have been guessed
@@ -156,13 +158,13 @@ function guess(message) {
 
     if (allTrue) {
         stopGame(message.guild.id, message.channel);
-        global.cbot.sendMessage('Congrats! You guessed the word!', message.channel);
+        message.channel.send('Congrats! You guessed the word!');
     }
 
     // We lost :$(
     if (Object.keys(game.guesses).length == 7) {
         stopGame(message.guild.id, message.channel);
-        global.cbot.sendMessage(`You've lost :&(`, message.channel);
+        message.channel.send(`You've lost :&(`);
     }
 
     print(message.guild.id);
@@ -186,15 +188,15 @@ hangman.callback = function(message, action) {
 
         newGame(message, message.author);
 
-        global.cbot.sendMessage('Okay, let\'s get this game started! I need you to send me the word you want to use', message.author);
+        message.author.send('Okay, let\'s get this game started! I need you to send me the word you want to use');
         return `Alright <@${message.author.id}>, I've sent you a DM. Please respond there to start the game!`;
     } else if (action == 'stop') {
         stopGame(message.guild.id, message.channel)
     }
 }
 
-module.exports.addHooks = function(bot, discord) {
-    discord.on('message', message => {
+module.exports.addHooks = function(client) {
+    client.on('message', message => {
         if (message.author.bot) {
             return;
         }
@@ -209,7 +211,7 @@ module.exports.addHooks = function(bot, discord) {
                     if (validateWord(message.content)) {
                         startGame(key, message.content);
                     } else {
-                        global.cbot.sendMessage('That word isn\'t valid! We need at least one character', message.author);
+                        message.author.send('That word isn\'t valid! We need at least one character');
                     }
                 }
             })

@@ -1,3 +1,5 @@
+let CommandHandler = require('@models/CommandHandler');
+
 let constructParamHelp = function(cmdObj) {
     let helpStr = "";
     
@@ -16,7 +18,7 @@ help.prettyName = 'Help';
 help.help = 'Prints a list of the commands and their purpose';
 
 help.callback = function(message) {
-    let commands = global.cbot.getCommands();
+    let commands = CommandHandler.getCommands();
 
     // Generate a help string with the alias, help and param string
     let helpStr = "To view parameters for a command, type !help <command alias>\n\n";
@@ -26,7 +28,7 @@ help.callback = function(message) {
 
         let paramHelp = constructParamHelp(cmdObj);
 
-        helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: !${cmdAlias} ${paramHelp}\n`;
+        helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: \`\`!${cmdAlias} ${paramHelp}\n\`\``;
         
         let restrictions = cmdObj.getRestricted();
         if (restrictions.length > 0) {
@@ -37,7 +39,7 @@ help.callback = function(message) {
         helpStr += '\n';
     }
 
-    global.cbot.sendMessage(helpStr, message.member);
+    message.author.send(helpStr, { split: true });
 }
 
 let cmdHelp = {};
@@ -54,15 +56,15 @@ cmdHelp.params = [
 cmdHelp.callback = function(message, command) {
     let helpStr = "A list of available commands can be found below.\n\n";
     
-    if (!global.cbot.isValidCommand(command)) {
+    if (!CommandHandler.isValidCommand(command)) {
         return 'No command found with that alias';
     }
 
     // Generate the help string for this single command
-    let cmdObj = global.cbot.getCommand(command);
+    let cmdObj = CommandHandler.getCommand(command);
     let paramHelp = constructParamHelp(cmdObj);
 
-    helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: !${command} ${paramHelp}\n`;
+    helpStr += `${cmdObj.getName()}: ${cmdObj.getHelp()}\nCalled with: \`\`!${command} ${paramHelp}\n\`\``;
     let restrictions = cmdObj.getRestricted();
     if (restrictions.length > 0) {
         helpStr += 'Restricted to: ' + restrictions.join(', ') + '\n';
@@ -70,7 +72,7 @@ cmdHelp.callback = function(message, command) {
     helpStr += '\n';
     
     // Send a PM to the user
-    global.cbot.sendMessage(helpStr, message.member);
+    message.author.send(helpStr, { split: true });
 }
 
 module.exports.commands = [help, cmdHelp];

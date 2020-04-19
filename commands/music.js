@@ -1,3 +1,5 @@
+let CommandHandler = require('@models/CommandHandler');
+
 const ytdl = require('ytdl-core-discord');
 const ytlist = require('youtube-playlist');
 const ytsearch = require('youtube-search');
@@ -12,14 +14,14 @@ let verifyChannelPerms = function(message) {
     // Verify that the user is in a voice channel
     let voiceCh = message.member.voice.channel;
     if (!voiceCh) {
-        global.cbot.sendMessage('You need to be in a voice channel to play music', message.channel);
+        message.channel.send('You need to be in a voice channel to play music');
         return;
     }
 
     // Check that we have the correct permissions
     let perms = voiceCh.permissionsFor(message.client.user);
     if (!perms.has('CONNECT') || !perms.has('SPEAK')) {
-        global.cbot.sendMessage('I need permission to join and speak here!', message.channel);
+        message.channel.send('I need permission to join and speak here!');
         return;
     }
 }
@@ -36,7 +38,7 @@ let playNextSong = async function(guildId, channel) {
         queue.connection.channel.leave();
         serverQueues.delete(guildId);
 
-        global.cbot.sendMessage('No songs left in the queue, leaving', channel);
+        channel.send('No songs left in the queue, leaving');
         return;
     }
 
@@ -55,7 +57,7 @@ let playNextSong = async function(guildId, channel) {
         playNextSong(guildId, channel);
     });
     dispatcher.on('error', err => {
-        global.cbot.sendMessage('Dispatcher error: ' + err, channel);
+        channel.send('Dispatcher error: ' + err);
     });
     dispatcher.on('debug', debugInfo => {
         console.log(debugInfo);
@@ -73,7 +75,7 @@ let playNextSong = async function(guildId, channel) {
     // Set the volume logarithmically
     dispatcher.setVolumeLogarithmic(queue.volume / 100);
 
-    global.cbot.sendMessage(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`, channel);
+    channel.send(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`);
 }
 
 let createNewQueue = async function(message, songs) {
@@ -177,6 +179,7 @@ async function getSongs(descriptor) {
     return songs;
 }
 
+// TODO: fix bs with not working searching + playlist
 let play = {};
 play.aliases = ['play'];
 play.prettyName = 'Play Song';
@@ -408,7 +411,7 @@ getQueue.callback = function(message) {
             i += 1;
         }
 
-        // Costruct the string
+        // Construct the string
         queueStr = `There are ${queue.songs.length} songs in the queue. The first ${i} are ` + queueStr.substr(0, queueStr.length - 2); 
     } else {
         queueStr = 'There are no songs in the queue';
@@ -418,13 +421,13 @@ getQueue.callback = function(message) {
     return queueStr
 }
 
-module.exports.addHooks = function(bot, discord) {
+module.exports.addHooks = function(client) {
     // Hook to see if we should stop playing music when everyone leaves the channel
-    discord.on("voiceStateUpdate", function(oldMember){
+    client.on("voiceStateUpdate", function(oldMember){
         try {
             let queue = getServerQueue(oldMember.guild.id);
             if (!queue) {
-                bot.sendMessage('No active queue', queue.textChannel);
+                queue.textChannel.send('No active queue');
                 return;
             }
 
@@ -433,7 +436,7 @@ module.exports.addHooks = function(bot, discord) {
             if (queue.voiceChannel.members.size == 1) {
                 queue.songs = [];
                 
-                bot.sendMessage('Everyone left the channel. Cleared the active queue and stopped playing all songs', queue.textChannel);
+                queue.textChannel.send('Everyone left the channel. Cleared the active queue and stopped playing all songs');
                 
                 queue.connection.dispatcher.end();
             }

@@ -1,5 +1,7 @@
 let request = require('request');
-let {ROLES} = require('../classes/RoleConstants');
+
+//TODO: Remove this
+let {ROLES} = require('../models/RoleConstants');
 let utils = {};
 
 /**

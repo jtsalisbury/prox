@@ -1,15 +1,16 @@
 class Command {
-    constructor(aliases, prettyName, help, callback) {
+    constructor(aliases, prettyName, help, callback, useDatabase) {
         this.aliases = aliases;
         this.prettyName = prettyName;
         this.help = help;
         this.cback = callback;
+        this.useDatabase = useDatabase;
         this.params = [];
         this.restrictedTo = [];
         this.permissions = [];
     }
 
-    addParam (name, type, optional, def) {
+    addParam(name, type, optional, def) {
         this.params.push({
             name: name,
             type: type,
@@ -21,13 +22,13 @@ class Command {
         return this;
     }
 
-    addPermission (name) {
+    addPermission(name) {
         this.permissions.push(name);
 
         return this;
     }
 
-    setParamValue (name, newValue) {
+    setParamValue(name, newValue) {
         // Assign the parameter a value. This is used for execution
         for (let i in this.getParams()) {
             let paramData = this.params[i];
@@ -38,13 +39,13 @@ class Command {
         }
     }
 
-    restrictTo (role) {
+    restrictTo(role) {
         this.restrictedTo.push(role);
 
         return this;
     }
 
-    canExecute (roles) {
+    canExecute(roles) {
         if (this.restrictedTo.length > 0) {
             return roles.some(role => this.restrictedTo.includes(role.name));
         }
@@ -59,7 +60,7 @@ class Command {
         }
     }
 
-    async execute (message) {
+    async execute(message) {
         let paramValues = [];
         let params = this.getParams();
 
