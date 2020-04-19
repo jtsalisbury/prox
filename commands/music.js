@@ -145,7 +145,7 @@ async function getSongs(descriptor) {
     if (link.indexOf('youtube') !== -1) {
         
         // Determine whether we are dealing with a playlist or not
-        if (link.indexOf('&list=') !== -1) {
+        if (link.indexOf('&list=') !== -1 || link.indexOf('playlist') !== -1) {
             // Query YouTube to get all the songs in the playlist
             let result = await ytlist(link, ['name', 'url']);
             result.data.playlist.forEach(obj => {
