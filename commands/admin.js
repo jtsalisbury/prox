@@ -11,10 +11,13 @@ kick.params = [
     },
     {
         name: 'reason',
-        type: 'string'
+        type: 'string',
+        optional: true,
+        default: 'No reason provided'
     }
 ];
-kick.roles = [ROLES.ADMIN, ROLES.MOD];
+kick.userPermissions = ['KICK_MEMBERS'];
+kick.executePermissions = ['KICK_MEMBERS'];
 kick.callback = async function(message, target, reason) {
     let member = message.mentions.members.first() || message.guild.members.get(target);
     if (!member) {
@@ -36,10 +39,13 @@ purge.help = 'Remove the last (up to) 100 messages';
 purge.params = [
     {
         name: 'count',
-        type: 'number'
+        type: 'number',
+        optional: true,
+        default: 2
     }
 ];
-purge.roles = [ROLES.ADMIN, ROLES.MOD];
+purge.userPermissions = ['MANAGE_MESSAGES'];
+purge.executePermissions = ['MANAGE_MESSAGES'];
 purge.callback = async function(message, count) {
     if (count < 2 || count > 100) {
         return 'Please provide a number between 2 and 100';

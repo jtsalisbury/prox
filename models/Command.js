@@ -1,29 +1,21 @@
 class Command {
-    constructor(aliases, prettyName, help, callback, useDatabase) {
+    constructor(aliases, prettyName, help, callback, userPerms, execPerms) {
         this.aliases = aliases;
         this.prettyName = prettyName;
         this.help = help;
         this.cback = callback;
-        this.useDatabase = useDatabase;
         this.params = [];
-        this.restrictedTo = [];
-        this.permissions = [];
+        this.reqUserPerms = userPerms;
+        this.reqExecPerms = execPerms;
     }
 
     addParam(name, type, optional, def) {
         this.params.push({
             name: name,
             type: type,
-            value: null,
             optional: optional,
             default: def
         });
-
-        return this;
-    }
-
-    addPermission(name) {
-        this.permissions.push(name);
 
         return this;
     }
@@ -39,40 +31,12 @@ class Command {
         }
     }
 
-    restrictTo(role) {
-        this.restrictedTo.push(role);
-
-        return this;
+    getAliases() {
+        return this.aliases;
     }
 
-    canExecute(roles) {
-        if (this.restrictedTo.length > 0) {
-            return roles.some(role => this.restrictedTo.includes(role.name));
-        }
-
-        return true;
-    }
-
-    resetParams() {
-        let params = this.getParams();
-        for (let i in params) {
-            this.params[i].value = null;
-        }
-    }
-
-    async execute(message) {
-        let paramValues = [];
-        let params = this.getParams();
-
-        // Generate a 1d array with the parameter values
-        for (let paramName in params) {
-            let paramData = params[paramName];
-
-            paramValues.push(paramData.value);
-        }
-
-        // Execute the callback while spreading the parameter values
-        return await this.cback(message, ...paramValues);
+    getCallback() {
+        return this.cback;
     }
 
     getName() {
@@ -91,8 +55,12 @@ class Command {
         return this.restrictedTo;
     }
 
-    getPermissions() {
-        return this.permissions;
+    getUserPermissions() {
+        return this.reqUserPerms;
+    }
+
+    getExecPermissions() {
+        return this.reqExecPerms;
     }
 }
 

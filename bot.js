@@ -9,9 +9,11 @@ let path = require('path');
 let logger = require('winston');
 
 let _utils = require('@services/utils');
-let EventEmitter = require('@services/events');
+
+let EventService = require('@services/events');
 let CommandHandler = require('@models/CommandHandler');
 let GuildManager = require('@models/GuildManager');
+let MessageService = require('@services/message');
 
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
@@ -33,20 +35,14 @@ glob.sync('./commands/*.js').forEach(file => {
             cmdData.prettyName,
             cmdData.help,
             cmdData.callback,
-            cmdData.useDatabase ? true : false // in case undefined, resort to false
+            cmdData.userPermissions,
+            cmdData.executePermissions
         );
 
         // Don't forget parameters!
         if (cmdData.params) {
             cmdData.params.forEach(paramData => {
                 cmd.addParam(paramData.name, paramData.type, paramData.optional == undefined ? false : paramData.optional, paramData.default);
-            });
-        }
-
-        // And roles!
-        if (cmdData.roles) {
-            cmdData.roles.forEach(role => {
-                cmd.restrictTo(role);
             });
         }
     });
@@ -103,6 +99,10 @@ client.on('message', async message => {
     if (message.author.bot) {
         return;
     }
+    
+    if (!message.channel.permissionsFor(message.guild.me).has('SEND_MESSAGES', false)) {
+        return;
+    }
 
     if (process.env.DEBUG_MODE) {
         if (message.guild.id != '659852554754064410') {
@@ -111,27 +111,25 @@ client.on('message', async message => {
     }
 
     let guild = GuildManager.getGuild(message.guild.id);
-    EventEmitter.emit('updateStats', message.guild.id, 'message', guild.statistics.message ? guild.statistics.message + 1 : 1);
+
+    if (guild && guild.statistics) {
+        EventService.emit('updateStats', message.guild.id, 'message', guild.statistics.message ? guild.statistics.message + 1 : 1);
+    }
 
     // Our client needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     let content = message.content;
     if (content.substring(0, 1) == '!') {
         let parts = _utils.parseLine(content.substr(1));
-        let cmd = parts[0].toLowerCase();
+        let alias = parts[0].toLowerCase();
 
         parts.shift();
 
-        // Set the active command and execute the handler
-        if (!CommandHandler.setActiveCommand(cmd, message)) {
-            return;
-        }
-        
-        let response = await CommandHandler.executeCommand(message, parts);
+        let response = await CommandHandler.executeCommand(alias, message, parts);
 
         // If we should print a message
         if (response) {
-            message.channel.send(response, { split: true });
+            MessageService.sendMessage(response, message.channel);
         }
     }
 });

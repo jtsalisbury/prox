@@ -1,4 +1,5 @@
 let CommandHandler = require('@models/CommandHandler');
+let MessageService = require('@services/message');
 
 let gameQueue = new Map();
 
@@ -51,7 +52,7 @@ function startGame(guildId, word) {
         }
     })
 
-    game.channel.send('Okay, here we go! You can guess by sending a single letter, or you can try to guess the whole word');
+    MessageService.sendMessage('Okay, here we go! You can guess by sendMessageing a single letter, or you can try to guess the whole word', game.channel);
     print(guildId);
 }
 
@@ -60,11 +61,11 @@ function stopGame(guildId, channel) {
     let game = getGame(guildId);
 
     if (!game) {
-        channel.send('No hangman game is running');
+        MessageService.sendMessage('No hangman game is running', channel);
         return;
     }
 
-    channel.send(`The hangman game has ended. The word was: ${game.word}`);
+    MessageService.sendMessage(`The hangman game has ended. The word was: ${game.word}`, channel);
 
     gameQueue.delete(guildId);
 }
@@ -116,7 +117,7 @@ function print(guildId) {
 
     // Combine the message
     let combined = `\`\`\`${man}\`\`\`\`\`\`Guesses: ${guesses}\nPhrase: ${word}\`\`\``;
-    game.channel.send(combined, { split: true });
+    MessageService.sendMessage(combined, game.channel);
 }
 
 function guess(message) {
@@ -125,7 +126,7 @@ function guess(message) {
 
     // If we've already made an incorrect guess
     if (game.guesses[guess]) {
-        message.channel.send('Somebody already guessed that!');
+        MessageService.sendMessage('Somebody already guessed that!', message.channel);
         print(message.guild.id);
         return;
     }
@@ -133,19 +134,19 @@ function guess(message) {
     // If the word equals the guess
     if (guess == game.word.toLowerCase()) {
         stopGame(message.guild.id, message.channel);
-        message.channel.send(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`);
+        MessageService.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
     } else if (game.requiredLetters[guess] != undefined) {
         // If the guess is a required letter, determine if it's been guessed or not
         if (game.requiredLetters[guess] == false) {
-            message.channel.send('Nice guess!');
+            MessageService.sendMessage('Nice guess!', message.channel);
             game.requiredLetters[guess] = true;
         } else {
-            message.channel.send('Somebody already guessed that!');
+            MessageService.sendMessage('Somebody already guessed that!', message.channel);
         }
     } else {
         // Incorrect guess
         game.guesses[guess] = true;
-        message.channel.send('Not quite!');
+        MessageService.sendMessage('Not quite!', message.channel);
     }
     
     // Determine if all the letters have been guessed
@@ -158,13 +159,13 @@ function guess(message) {
 
     if (allTrue) {
         stopGame(message.guild.id, message.channel);
-        message.channel.send('Congrats! You guessed the word!');
+        MessageService.sendMessage('Congrats! You guessed the word!', message.channel);
     }
 
     // We lost :$(
     if (Object.keys(game.guesses).length == 7) {
         stopGame(message.guild.id, message.channel);
-        message.channel.send(`You've lost :&(`);
+        MessageService.sendMessage(`You've lost :&(`, message.channel);
     }
 
     print(message.guild.id);
@@ -188,7 +189,7 @@ hangman.callback = function(message, action) {
 
         newGame(message, message.author);
 
-        message.author.send('Okay, let\'s get this game started! I need you to send me the word you want to use');
+        MessageService.sendMessage('Okay, let\'s get this game started! I need you to sendMessage me the word you want to use', message.author);
         return `Alright <@${message.author.id}>, I've sent you a DM. Please respond there to start the game!`;
     } else if (action == 'stop') {
         stopGame(message.guild.id, message.channel)
@@ -211,7 +212,7 @@ module.exports.addHooks = function(client) {
                     if (validateWord(message.content)) {
                         startGame(key, message.content);
                     } else {
-                        message.author.send('That word isn\'t valid! We need at least one character');
+                        MessageService.sendMessage('That word isn\'t valid! We need at least one character', message.author);
                     }
                 }
             })

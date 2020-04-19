@@ -1,4 +1,5 @@
 let CommandHandler = require('@models/CommandHandler');
+let MessageService = require('@services/message');
 
 let constructParamHelp = function(cmdObj) {
     let helpStr = "";
@@ -35,11 +36,11 @@ help.callback = function(message) {
             helpStr += 'Restricted to: ' + restrictions.join(', ') + '\n';
         }
         
-        // Send individual messages since discord can't handle >2000 characters
+        // sendMessage individual messages since discord can't handle >2000 characters
         helpStr += '\n';
     }
 
-    message.author.send(helpStr, { split: true });
+    MessageService.sendMessage(helpStr, message.author);
 }
 
 let cmdHelp = {};
@@ -71,8 +72,8 @@ cmdHelp.callback = function(message, command) {
     }
     helpStr += '\n';
     
-    // Send a PM to the user
-    message.author.send(helpStr, { split: true });
+    // sendMessage a PM to the user
+    MessageService.sendMessage(helpStr, message.author);
 }
 
 module.exports.commands = [help, cmdHelp];

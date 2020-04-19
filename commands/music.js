@@ -1,4 +1,4 @@
-let CommandHandler = require('@models/CommandHandler');
+let MessageService = require('@services/message');
 
 const ytdl = require('ytdl-core-discord');
 const ytlist = require('youtube-playlist');
@@ -14,14 +14,7 @@ let verifyChannelPerms = function(message) {
     // Verify that the user is in a voice channel
     let voiceCh = message.member.voice.channel;
     if (!voiceCh) {
-        message.channel.send('You need to be in a voice channel to play music');
-        return;
-    }
-
-    // Check that we have the correct permissions
-    let perms = voiceCh.permissionsFor(message.client.user);
-    if (!perms.has('CONNECT') || !perms.has('SPEAK')) {
-        message.channel.send('I need permission to join and speak here!');
+        MessageService.sendMessage('You need to be in a voice channel to play music', message.channel);
         return;
     }
 }
@@ -38,7 +31,7 @@ let playNextSong = async function(guildId, channel) {
         queue.connection.channel.leave();
         serverQueues.delete(guildId);
 
-        channel.send('No songs left in the queue, leaving');
+        MessageService.sendMessage('No songs left in the queue, leaving', message.channel);
         return;
     }
 
@@ -57,7 +50,7 @@ let playNextSong = async function(guildId, channel) {
         playNextSong(guildId, channel);
     });
     dispatcher.on('error', err => {
-        channel.send('Dispatcher error: ' + err);
+        MessageService.sendMessage('Dispatcher error: ' + err, channel);
     });
     dispatcher.on('debug', debugInfo => {
         console.log(debugInfo);
@@ -75,7 +68,7 @@ let playNextSong = async function(guildId, channel) {
     // Set the volume logarithmically
     dispatcher.setVolumeLogarithmic(queue.volume / 100);
 
-    channel.send(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`);
+    MessageService.sendMessage(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`, channel);
 }
 
 let createNewQueue = async function(message, songs) {
@@ -190,6 +183,7 @@ play.params = [
         type: 'string'
     }
 ];
+play.executePermissions = ['SPEAK', 'CONNECT'];
 play.callback = async function(message, descriptor) {
     verifyChannelPerms(message);
 
@@ -227,6 +221,7 @@ enqueue.params = [
         type: 'string'
     }
 ];
+play.executePermissions = ['SPEAK', 'CONNECT'];
 enqueue.callback = async function(message, descriptor) {
     verifyChannelPerms(message);
 
@@ -258,8 +253,6 @@ dequeue.help = 'Removes the next song from the queue';
 dequeue.callback = function(message) {
     let guildId = message.guild.id;
 
-    verifyChannelPerms(message);
-
     let queue = getServerQueue(guildId);
     if (!queue) {
         return 'No active queue';
@@ -290,8 +283,6 @@ skip.help = 'Skips the currently playing song';
 skip.callback = function(message) {
     let guildId = message.guild.id;
 
-    verifyChannelPerms(message);
-
     // Go ahead and end the current stream. This will trigger moving to the next song in the queue.
     let queue = getServerQueue(guildId);
     if (!queue) {
@@ -307,8 +298,6 @@ stop.prettyName = 'Stop Song';
 stop.help = 'Clears the queue and stops the currently playing song';
 stop.callback = function(message) {
     let guildId = message.guild.id;
-
-    verifyChannelPerms(message);
 
     // Empty the queue and end the stream, this will delete the queue
     let queue = getServerQueue(guildId);
@@ -329,8 +318,6 @@ clear.help = 'Clears the queue but keeps playing the current song';
 clear.callback = function(message) {
     let guildId = message.guild.id;
 
-    verifyChannelPerms(message);
-
     // Empty the queue
     let queue = getServerQueue(guildId);
     if (!queue) {
@@ -349,8 +336,6 @@ pause.help = 'Pauses the stream';
 pause.callback = function(message) {
     let guildId = message.guild.id;
 
-    verifyChannelPerms(message);
-
     // Pause the stream
     let queue = getServerQueue(guildId);
     if (!queue) {
@@ -368,8 +353,6 @@ resume.prettyName = 'Resume Stream';
 resume.help = 'Resumes the stream';
 resume.callback = function(message) {
     let guildId = message.guild.id;
-
-    verifyChannelPerms(message);
 
     // Resume the stream if it's paused
     let queue = getServerQueue(guildId);
@@ -392,8 +375,6 @@ getQueue.prettyName = 'Queue';
 getQueue.help = 'Prints the first five songs of the queue';
 getQueue.callback = function(message) {
     let guildId = message.guild.id;
-
-    verifyChannelPerms(message);
     
     // Grab the queue
     let queue = getServerQueue(guildId);
@@ -427,7 +408,7 @@ module.exports.addHooks = function(client) {
         try {
             let queue = getServerQueue(oldMember.guild.id);
             if (!queue) {
-                queue.textChannel.send('No active queue');
+                MessageService.sendMessage('No active queue', queue.textChannel);
                 return;
             }
 
@@ -436,7 +417,7 @@ module.exports.addHooks = function(client) {
             if (queue.voiceChannel.members.size == 1) {
                 queue.songs = [];
                 
-                queue.textChannel.send('Everyone left the channel. Cleared the active queue and stopped playing all songs');
+                MessageService.sendMessage('Everyone left the channel. Cleared the active queue and stopped playing all songs', queue.textChannel);
                 
                 queue.connection.dispatcher.end();
             }
