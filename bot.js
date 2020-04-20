@@ -94,6 +94,10 @@ client.on('guildDelete', guild => {
     GuildManager.removeGuild(guild.id);
 });
 
+function handleMessage(message) {
+    
+}
+
 // We have a new message
 client.on('message', async message => {
     if (message.author.bot) {
@@ -109,13 +113,7 @@ client.on('message', async message => {
             return;
         }
     }
-
-    let guild = GuildManager.getGuild(message.guild.id);
-
-    if (guild && guild.statistics) {
-        EventService.emit('updateStats', message.guild.id, 'message', guild.statistics.message ? guild.statistics.message + 1 : 1);
-    }
-
+    
     // Our client needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     let content = message.content;
@@ -131,5 +129,23 @@ client.on('message', async message => {
         if (response) {
             MessageService.sendMessage(response, message.channel);
         }
+    }
+
+    // Record the number of times a user messages
+    let guild = GuildManager.getGuild(message.guild.id);
+    if (guild) {
+        let userId = message.author.id;
+        let messages = _utils.resolve(guild.statistics, 'messages');
+
+        // Update the count
+        let newCount = 1;
+        if (messages[userId]) {
+            newCount += messages[userId];
+        }
+
+        // Set it and save!
+        messages[userId] = newCount;
+        guild.markModified('statistics.messages');
+        guild.save();
     }
 });

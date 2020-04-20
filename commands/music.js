@@ -1,9 +1,12 @@
 let MessageService = require('@services/message');
+let EventService = require('@services/events');
+let GuildManager = require('@models/GuildManager');
 
 const ytdl = require('ytdl-core-discord');
 const ytlist = require('youtube-playlist');
 const ytsearch = require('youtube-search');
 const utils = require('util');
+const _utils = require('@services/utils'); // i chose a great name didn't i
 
 const ytsearchProm = utils.promisify(ytsearch);
 
@@ -31,7 +34,7 @@ let playNextSong = async function(guildId, channel) {
         queue.connection.channel.leave();
         serverQueues.delete(guildId);
 
-        MessageService.sendMessage('No songs left in the queue, leaving', message.channel);
+        MessageService.sendMessage('No songs left in the queue, leaving', channel);
         return;
     }
 
@@ -41,6 +44,32 @@ let playNextSong = async function(guildId, channel) {
     let stream = await ytdl(curSong.url, {
         highWaterMark: 2500000,
         filter: 'audioandvideo' 
+    });
+
+    // I hate this. Supposedly, above fires an info event. I can't seem to grab it, though.
+    let infoProm = ytdl.getInfo(curSong.url);
+    infoProm.then(songInfo => {
+        if (songInfo.media.category == 'Music') {
+            let artists = [];
+            let titles = [];
+
+            // Track artists
+            if (songInfo.media.artist) {
+                let newArtists = songInfo.media.artist.split(',');
+                newArtists.forEach(artist => {
+                    artist = artist.trim();
+
+                    artists[artist] = artists[artist] ? artists[artist] + 1 : 1;
+                })
+            }
+            
+            // Track song titles
+            if (songInfo.media.song) {
+                titles[songInfo.media.song] =  1;
+            }
+
+            updateMusicStats(artists, titles, guildId);
+        }
     });
 
     let dispatcher = queue.connection.play(stream, { type: 'opus' });
@@ -122,7 +151,48 @@ volume.callback = function(message, volume) {
     return `The volume has been set to **${volume}**`
 }
 
-async function getSongs(descriptor) {
+// Note: artists, songs can only be tracked if the info is on youtube
+function updateMusicStats(newArtistData, newSongData, guildId) {
+    //let currentTitles =
+    let guild = GuildManager.getGuild(guildId);
+    if (guild) {
+
+        // Get the current artist data
+        let curArtistData = _utils.resolve(guild.statistics, 'music.artists');
+        Object.keys(newArtistData).forEach(artist => {
+            if (!artist) {
+                return;
+            }
+            
+            // Combine the current artist data
+            if (curArtistData[artist]) {
+                curArtistData[artist] = curArtistData[artist] + newArtistData[artist]
+            } else {
+                curArtistData[artist] = newArtistData[artist];
+            }
+        });
+
+        // Get the current song data
+        let curSongData = _utils.resolve(guild.statistics, 'music.songs');
+        Object.keys(newSongData).forEach(song => {
+            if (!song) {
+                return;
+            }
+
+            // Combine the current song data
+            if (curArtistData[song]) {
+                curSongData[song] = curSongData[song] + newSongData[song]
+            } else {
+                curSongData[song] = newSongData[song];
+            }
+        });
+
+        guild.markModified('statistics.music');
+        guild.save();
+    }
+}
+
+async function getSongs(descriptor, guildId) {
     let link = descriptor;
     if (descriptor.indexOf('youtube') === -1 && descriptor.indexOf('soundcloud') === -1) {
         let opts = {
@@ -139,21 +209,20 @@ async function getSongs(descriptor) {
         }
     }
     
-    let songs = [];
+    let artists = {};
 
     // YouTube link
     if (link.indexOf('youtube') !== -1) {
-        
         // Determine whether we are dealing with a playlist or not
         if (link.indexOf('&list=') !== -1 || link.indexOf('playlist') !== -1) {
             // Query YouTube to get all the songs in the playlist
             let result = await ytlist(link, ['name', 'url']);
-            result.data.playlist.forEach(obj => {
+            result.data.playlist.forEach(songInfo => {
                 songs.push({
-                    title: obj.name,
-                    url: obj.url
+                    title: songInfo.name,
+                    url: songInfo.url
                 });
-            })
+            });
         } else {
             // Grab the info for our one song we want to add
             let songInfo = await ytdl.getInfo(link);
@@ -172,7 +241,6 @@ async function getSongs(descriptor) {
     return songs;
 }
 
-// TODO: fix bs with not working searching + playlist
 let play = {};
 play.aliases = ['play'];
 play.prettyName = 'Play Song';
@@ -187,7 +255,7 @@ play.executePermissions = ['SPEAK', 'CONNECT'];
 play.callback = async function(message, descriptor) {
     verifyChannelPerms(message);
 
-    let songs = await getSongs(descriptor);    
+    let songs = await getSongs(descriptor, message.guild.id);    
 
     // If there's a server queue add the song
     let queue = serverQueues.get(message.guild.id);
@@ -225,7 +293,7 @@ play.executePermissions = ['SPEAK', 'CONNECT'];
 enqueue.callback = async function(message, descriptor) {
     verifyChannelPerms(message);
 
-    let songs = await getSongs(descriptor);    
+    let songs = await getSongs(descriptor, message.guild.id);    
 
     // If there's a server queue add the song
     let queue = serverQueues.get(message.guild.id);
@@ -404,7 +472,7 @@ getQueue.callback = function(message) {
 
 module.exports.addHooks = function(client) {
     // Hook to see if we should stop playing music when everyone leaves the channel
-    client.on("voiceStateUpdate", function(oldMember){
+    /*client.on("voiceStateUpdate", function(oldMember){
         try {
             let queue = getServerQueue(oldMember.guild.id);
             if (!queue) {
@@ -423,7 +491,7 @@ module.exports.addHooks = function(client) {
             }
             
         } catch(e) {}    
-    });
+    });*/
 }
 
 module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume];

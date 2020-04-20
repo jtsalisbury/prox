@@ -1,6 +1,7 @@
 let Command = require('@models/Command.js');
 let GuildManager = require('@models/GuildManager');
 let MessageService = require('@services/message');
+let _utils = require('@services/utils');
 
 class CommandHandler {
     constructor() {
@@ -97,8 +98,23 @@ class CommandHandler {
         // Finally, execute the command reset the parameters
         let res = await (activeCommand.getCallback())(message, ...execParams);
 
+        // Record the command usage
+        let baseAlias = activeCommand.getAliases()[0];
+        let guild = GuildManager.getGuild(message.guild.id);
+        if (guild) {
+            // Get current usage profile
+            let currentUsage = _utils.resolve(guild.statistics, 'usage');
+            let newCount = 1;
+            if (currentUsage[baseAlias]) {
+                newCount += currentUsage[baseAlias];
+            }
+
+            // Update and save
+            currentUsage[baseAlias] = newCount;
+            guild.markModified('statistics.usage');
+        }
+
         return res;
-        
     }
 
     convertToParamType (paramType, value) {
@@ -114,7 +130,7 @@ class CommandHandler {
     }
 
     getCommands() {
-        return this.commands.values();
+        return this.commands;
     }
 
     getCommand(alias) {

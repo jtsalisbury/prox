@@ -32,6 +32,10 @@ class GuildManager {
                     userAction: mongoose.Schema.Types.String,
                     performAction: mongoose.Schema.Types.String
                 }],
+                speech: [{
+                    whitelistedUsers: [],
+                    replyChannelId: mongoose.Schema.Types.String
+                }],
                 statistics: mongoose.Schema.Types.Mixed
             });
 

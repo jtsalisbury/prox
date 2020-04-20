@@ -4,6 +4,31 @@ let request = require('request');
 let {ROLES} = require('../models/RoleConstants');
 let utils = {};
 
+utils.resolve = function(obj, path, value) {
+    // Path is a string still, split it
+    if (typeof path == 'string') {
+        return utils.resolve(obj, path.split('.'), value);
+    }
+    
+    // Property doesn't exist, create it
+    if (!obj[path[0]] && path[0]) {
+        obj[path[0]] = {}
+    }
+
+    // Set the property
+    if (path.length == 1 && value != undefined) {
+        return obj[path[0]] = value;
+    }
+
+    // Return the value
+    if (path.length == 0) {
+        return obj;
+    }
+
+    // Keep recursively going
+    return utils.resolve(obj[path[0]], path.slice(1), value);
+}
+
 /**
  * Generate a new HTTP GET request
  * @param {String} url, the url to GET from
@@ -34,6 +59,7 @@ utils.HTTPGet = function(url, headers) {
         });
     });
 };
+
 
 /**
  * Generate a new HTTP POST request
