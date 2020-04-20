@@ -78,7 +78,7 @@ client.on('ready', async () => {
                 guildPromises.push(GuildManager.addGuild(guild.id));
             }
         } else {
-            guildPromises.push(GuildManager.addGuild(guild.id));
+            guildPromises.push(GuildManager.addGuild(guild.id, true));
         }
     })
 
@@ -96,6 +96,10 @@ EventService.on('cbot.guildsLoaded', function(loaded) {
     function saveGuilds() {
         console.log('Saving guilds...');
         guilds.forEach(guild => {
+            if (!guild) {
+                continue;
+            }
+
             guild.save();
         });
 
