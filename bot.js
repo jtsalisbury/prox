@@ -17,6 +17,11 @@ let MessageService = require('@services/message');
 
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
+
+    if (!required.commands) {
+        return;
+    }
+
     let commands = null;
     if (typeof required.commands === 'function') {
         // we need to pass the bot as an argument. the function should immediately return the commands
@@ -64,26 +69,55 @@ client.on('ready', async () => {
     logger.info(client.user.username + ' - (' + client.user.id + ')');
 
     await GuildManager.connect();
-
+    
+    // Make sure we get up to date documents on each guild
+    let guildPromises = [];
     client.guilds.cache.array().forEach(guild => {
         if (process.env.DEBUG_MODE) {
             if (guild.id == '659852554754064410') {
-                GuildManager.addGuild(guild.id);
+                guildPromises.push(GuildManager.addGuild(guild.id));
             }
+        } else {
+            guildPromises.push(GuildManager.addGuild(guild.id));
         }
-    });
+    })
+
+    // Once we've got all the data, fire an event
+    Promise.all(guildPromises).then((guilds) => {
+        EventService.emit('cbot.guildsLoaded', guilds);
+    })
 });
 
-client.on('guildCreate', guild => {
+// Save every five minutes
+let guilds = [];
+
+EventService.on('cbot.guildsLoaded', function(loaded) {
+    guilds = loaded;
+    function saveGuilds() {
+        console.log('Saving guilds...');
+        guilds.forEach(guild => {
+            guild.save();
+        });
+
+        setTimeout(saveGuilds, 300000);
+    }
+    saveGuilds();
+})
+
+// We joined a guild
+client.on('guildCreate', async guild => {
     if (process.env.DEBUG_MODE) {
         if (guild.id != '659852554754064410') {
             return;
         }
     }
 
-    GuildManager.addGuild(guild.id, true);
+    let newGuild = await GuildManager.addGuild(guild.id, true);
+    EventService.emit('cbot.guildAdded', newGuild);
+    guilds.push(newGuild);
 });
 
+// We left a guild
 client.on('guildDelete', guild => {
     if (process.env.DEBUG_MODE) {
         if (guild.id != '659852554754064410') {
@@ -91,12 +125,15 @@ client.on('guildDelete', guild => {
         }
     }
 
-    GuildManager.removeGuild(guild.id);
+    // Make sure we update any cache systems that may hold the doc
+    GuildManager.removeGuild(guild.id)
+    EventService.emit('cbot.guildRemoved', guild.id);
+    guilds.forEach((guilds, index) => {
+        if (guild.guildId == guild.id) {
+            guilds.splice(index, 1);
+        }
+    })
 });
-
-function handleMessage(message) {
-    
-}
 
 // We have a new message
 client.on('message', async message => {
@@ -146,6 +183,5 @@ client.on('message', async message => {
         // Set it and save!
         messages[userId] = newCount;
         guild.markModified('statistics.messages');
-        guild.save();
     }
 });

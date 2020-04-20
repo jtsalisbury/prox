@@ -1,4 +1,4 @@
-let EventEmitter = require('@services/events');
+/*let EventEmitter = require('@services/events');
 let _utils = require('@services/utils');
 let fs = require('fs');
 let GuildManager = require('@models/GuildManager');
@@ -96,4 +96,4 @@ module.exports.addHooks = function(client) {
     })
 }
 
-module.exports.commands = [join, leave, setReply];
+module.exports.commands = [join, leave, setReply];*/

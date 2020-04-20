@@ -36,6 +36,16 @@ class GuildManager {
                     whitelistedUsers: [],
                     replyChannelId: mongoose.Schema.Types.String
                 }],
+                events: [{
+                    title: mongoose.Schema.Types.String,
+                    description: mongoose.Schema.Types.String,
+                    channelId: mongoose.Schema.Types.String,
+                    messageChannelId: mongoose.Schema.Types.String,
+                    messageId: mongoose.Schema.Types.String,
+                    date: mongoose.Schema.Types.Date,
+                    creatorId: mongoose.Schema.Types.String,
+                    eventPassed: mongoose.Schema.Types.Boolean
+                }],
                 statistics: mongoose.Schema.Types.Mixed
             });
 
@@ -46,27 +56,31 @@ class GuildManager {
     }
 
     addGuild(guildId, newGuild = false) {
-        if (newGuild) {
-            let newGuild = new this.Guild({
-                guildId: guildId,
-                restrictions: [],
-                reactions: [],
-                autoActions: [],
-                statistics: {}
-            });
+        return new Promise((resolve, reject) => {
+            if (newGuild) {
+                let newGuild = new this.Guild({
+                    guildId: guildId,
+                    restrictions: [],
+                    reactions: [],
+                    autoActions: [],
+                    statistics: {}
+                });
 
-            newGuild.save();
-            this.guildCache.set(guildId, newGuild);
-        } else {
-            this.Guild.findOne({ guildId: guildId }, (err, res) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
+                newGuild.save();
+                resolve(newGuild);
+                this.guildCache.set(guildId, newGuild);
+            } else {
+                this.Guild.findOne({ guildId: guildId }, (err, res) => {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
 
-                this.guildCache.set(guildId, res);
-            });
-        }
+                    this.guildCache.set(guildId, res);
+                    resolve(res);
+                });
+            }
+        })
     }
 
     removeGuild(guildId) {

@@ -188,7 +188,6 @@ function updateMusicStats(newArtistData, newSongData, guildId) {
         });
 
         guild.markModified('statistics.music');
-        guild.save();
     }
 }
 
