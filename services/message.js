@@ -9,5 +9,5 @@ module.exports.messageChannelById = function(string, guild, id) {
 
     if (ch) {
         ch.send(string, { split: true });
-    }
+    } 
 }
