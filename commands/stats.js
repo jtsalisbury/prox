@@ -17,13 +17,22 @@ getStat.callback = function (message, stat) {
         return 'Invalid statistic';
     }
 
-    let allStats = [];
-    let guild = GuildManager.getGuild(message.guild.id);
-    if (!guild.statistics[stat]) {
-        return 'Nothing has been tracked for that yet!';
+    if (!guild.statistics) {
+        return 'Nothing has been tracked for that yet';
     }
 
-    Object.entries(guild.statistics[stat]).forEach(entry => {
+    let path = guild.statistics;
+    if (stat == 'artists' || stat == 'songs') {
+        path = path.music;
+    }
+
+    let allStats = [];
+    let guild = GuildManager.getGuild(message.guild.id);
+    if (!path[stat]) {
+        return 'Nothing has been tracked for that yet';
+    }
+
+    Object.entries(path[stat]).forEach(entry => {
         allStats.push({item: entry[0], count: entry[1]});
     })
 
