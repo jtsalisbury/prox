@@ -28,7 +28,7 @@ getStat.callback = function (message, stat) {
     }
 
     let allStats = [];
-    if (!path[stat]) {
+    if (!path || !path[stat]) {
         return 'Nothing has been tracked for that yet';
     }
 
