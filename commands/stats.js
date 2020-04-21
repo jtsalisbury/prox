@@ -17,6 +17,7 @@ getStat.callback = function (message, stat) {
         return 'Invalid statistic';
     }
 
+    let guild = GuildManager.getGuild(message.guild.id);
     if (!guild.statistics) {
         return 'Nothing has been tracked for that yet';
     }
@@ -27,7 +28,6 @@ getStat.callback = function (message, stat) {
     }
 
     let allStats = [];
-    let guild = GuildManager.getGuild(message.guild.id);
     if (!path[stat]) {
         return 'Nothing has been tracked for that yet';
     }
