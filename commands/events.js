@@ -57,7 +57,8 @@ create.callback = async function(message, title, channelName, description, dateT
     > A new event has been created!
     **${title}**
     Description: ${description}
-    Happening on: ${timeStr}
+    Happening on: ${timeStr}\n
+    Interested in joining? Reply with ✅ below!
     `;
 
     let generalMessage = await MessageService.sendMessage(format, message.channel);

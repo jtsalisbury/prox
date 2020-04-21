@@ -176,7 +176,7 @@ client.on('message', async message => {
     let guild = GuildManager.getGuild(message.guild.id);
     if (guild) {
         let userId = message.author.id;
-        let messages = _utils.resolve(guild.statistics, 'messages');
+        let messages = _utils.resolve(guild, 'statistics.messages');
 
         // Update the count
         let newCount = 1;

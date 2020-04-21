@@ -104,7 +104,7 @@ class CommandHandler {
         let guild = GuildManager.getGuild(message.guild.id);
         if (guild) {
             // Get current usage profile
-            let currentUsage = _utils.resolve(guild.statistics, 'usage');
+            let currentUsage = _utils.resolve(guild, 'statistics.usage');
             let newCount = 1;
             if (currentUsage[baseAlias]) {
                 newCount += currentUsage[baseAlias];

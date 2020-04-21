@@ -158,7 +158,7 @@ function updateMusicStats(newArtistData, newSongData, guildId) {
     if (guild) {
 
         // Get the current artist data
-        let curArtistData = _utils.resolve(guild.statistics, 'music.artists');
+        let curArtistData = _utils.resolve(guild, 'statistics.music.artists');
         Object.keys(newArtistData).forEach(artist => {
             if (!artist) {
                 return;
@@ -173,7 +173,7 @@ function updateMusicStats(newArtistData, newSongData, guildId) {
         });
 
         // Get the current song data
-        let curSongData = _utils.resolve(guild.statistics, 'music.songs');
+        let curSongData = _utils.resolve(guild, 'statistics.music.songs');
         Object.keys(newSongData).forEach(song => {
             if (!song) {
                 return;
