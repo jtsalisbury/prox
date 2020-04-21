@@ -189,7 +189,9 @@ class CommandHandler {
         }
 
         if (paramType == 'string') {
-            return value.replace(/[|&`;$%@"<>()+,]/g, "");
+            if (value) {
+                return value.replace(/[|&`;$%@"<>()+,]/g, "");
+            }
         }
         
         return value;
