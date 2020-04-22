@@ -76,7 +76,7 @@ class CommandHandler {
         params.forEach(paramData => {
             let curVal = parsedLine[parseIndex];
 
-            let converted = this.convertToParamType(paramData.type, curVal);
+            let converted = this.convertToParamType(paramData.type, curVal, message.guild.members);
 
             if (converted === undefined && !paramData.optional) {
                 MessageService.sendMessage('Invalid value for ' + paramData.name, message.channel);
@@ -118,13 +118,12 @@ class CommandHandler {
         return res;
     }
 
-    convertToParamType (paramType, value) {
+    convertToParamType (paramType, value, members) {
         if (paramType === 'number') {
             return Number(value);
         }
 
         if (paramType === 'future datetime') {
-
             // Validate pattern dd/mm/yyyy hh:mm pm/am EST
             if (!/^\d{1,2}\/\d{1,2}\/\d{4}\s\d{2}\:\d{2}\s[apAP]{1}[mM]{1}\s([A-Za-z]+)$/.test(value)) {
                 return;
@@ -191,6 +190,20 @@ class CommandHandler {
         if (paramType == 'string') {
             if (value) {
                 return value.replace(/[|&`;$%@"<>()+,]/g, "");
+            }
+        }
+        
+        if (paramType == 'member') {
+            if (!value) return;
+
+            if (value.startsWith('<@') && value.endsWith('>')) {
+                value = value.slice(2, -1);
+
+                if (value.startsWith('!')) {
+                    value = value.slice(1);
+                }
+
+                return members.cache.get(value);
             }
         }
         

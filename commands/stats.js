@@ -5,7 +5,7 @@ let GuildManager = require('@models/GuildManager');
 let getStat = {};
 getStat.aliases = ['stat', 'stats'];
 getStat.prettyName = 'Get Stats';
-getStat.help = 'Gets the requested highest stats for (messages, usage, artists, songs)';
+getStat.help = 'Gets the requested highest stats for (messages, usage, artists, songs, married, fucked, killed)';
 getStat.params = [{
     name: 'statistic',
     type: 'string'
@@ -13,7 +13,7 @@ getStat.params = [{
 getStat.callback = function (message, stat) {
     stat = stat.toLowerCase();
 
-    if (!['messages', 'usage', 'artists', 'songs'].includes(stat)) {
+    if (!['messages', 'usage', 'artists', 'songs', 'married', 'fucked', 'killed'].includes(stat)) {
         return 'Invalid statistic';
     }
 
@@ -25,6 +25,10 @@ getStat.callback = function (message, stat) {
     let path = guild.statistics;
     if (stat == 'artists' || stat == 'songs') {
         path = path.music;
+    }
+
+    if (stat == 'married' || stat == 'fucked' || stat == 'killed') {
+        path = path.mfk;
     }
 
     let allStats = [];
@@ -42,7 +46,7 @@ getStat.callback = function (message, stat) {
 
     top5 = top5.map((data) => {
         let combined = '';
-        if (stat == 'messages') {
+        if (['messages', 'married', 'fucked', 'killed'].includes(stat)) {
             combined += `<@${data.item}>`
         } else {
             combined += data.item;
