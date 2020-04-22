@@ -73,7 +73,7 @@ client.on('ready', async () => {
     // Make sure we get up to date documents on each guild
     let guildPromises = [];
     client.guilds.cache.array().forEach(guild => {
-        if (process.env.DEBUG_MODE) {
+        if (process.env.DEBUG_MODE == 'true') {
             if (guild.id == '659852554754064410') {
                 guildPromises.push(GuildManager.addGuild(guild.id));
             }
@@ -110,7 +110,7 @@ EventService.on('cbot.guildsLoaded', function(loaded) {
 
 // We joined a guild
 client.on('guildCreate', async guild => {
-    if (process.env.DEBUG_MODE) {
+    if (process.env.DEBUG_MODE == 'true') {
         if (guild.id != '659852554754064410') {
             return;
         }
@@ -123,7 +123,7 @@ client.on('guildCreate', async guild => {
 
 // We left a guild
 client.on('guildDelete', guild => {
-    if (process.env.DEBUG_MODE) {
+    if (process.env.DEBUG_MODE == 'true') {
         if (guild.id != '659852554754064410') {
             return;
         }
@@ -149,7 +149,7 @@ client.on('message', async message => {
         return;
     }
 
-    if (process.env.DEBUG_MODE) {
+    if (process.env.DEBUG_MODE == 'true') {
         if (message.guild.id != '659852554754064410') {
             return;
         }

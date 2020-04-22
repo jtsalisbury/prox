@@ -204,8 +204,7 @@ async function watchMessage(event, guild) {
     }
     
     // Get the first returned result with the message id
-    let message = await ch.messages.fetch(Number(event.messageId));
-    message = message.first();
+    let message = await ch.messages.fetch(event.messageId);
 
     if (message) {
         // Setup a collector to watch reactions
