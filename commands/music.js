@@ -208,7 +208,7 @@ async function getSongs(descriptor, guildId) {
         }
     }
     
-    let artists = {};
+    let songs = [];
 
     // YouTube link
     if (link.indexOf('youtube') !== -1) {

@@ -81,9 +81,9 @@ class CommandHandler {
             if (converted === undefined && !paramData.optional) {
                 MessageService.sendMessage('Invalid value for ' + paramData.name, message.channel);
                 validParams = false;
-            } else if (!converted === undefined && paramData.optional) {
+            } else if (converted === undefined && paramData.optional) {
                 parsedLine[parseIndex] = paramData.default || null;
-                curVal = parsedLine[parseIndex];
+                converted = parsedLine[parseIndex];
             }
             
             // Convert it to an expected type
