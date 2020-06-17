@@ -123,6 +123,19 @@ class CommandHandler {
             return Number(value);
         }
 
+        if (paramType === 'bool' || paramType === 'boolean') {
+            if (!value) {
+                return;
+            }
+
+            let lower = value.toLowerCase();
+            if (lower == 'y' || lower == 'true' || lower == 't' || lower == 'yes') {
+                return true;
+            }
+
+            return false;
+        }
+
         if (paramType === 'future datetime') {
             // Validate pattern dd/mm/yyyy hh:mm pm/am EST
             if (!/^\d{1,2}\/\d{1,2}\/\d{4}\s\d{2}\:\d{2}\s[apAP]{1}[mM]{1}\s([A-Za-z]+)$/.test(value)) {
