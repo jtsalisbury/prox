@@ -21,7 +21,7 @@ let formatCocktailInfo = function(info) {
             mixAmt = info[mixField];
         }
 
-        ingredientList += `, ${info[ingField]}(${mixAmt})`;
+        ingredientList += `, ${info[ingField]}(${mixAmt.trim()})`;
     }
 
     // Return the pretty string
