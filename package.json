@@ -5,7 +5,7 @@
     "main": "bot.js",
     "author": "crazyscouter",
     "dependencies": {
-        "@discordjs/opus": "^0.1.0",
+        "@discordjs/opus": "^0.3.0",
         "@google-cloud/speech": "^3.6.0",
         "bufferutil": "^4.0.1",
         "discord.js": "^12.2.0",
