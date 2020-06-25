@@ -219,7 +219,7 @@ webhookHandler.on('pull_request', (repo, data) => {
     // Get data for the message
     let user = data.pull_request.user.login;
     let prUrl = data.pull_request.html_url;
-    let message = `**GitHub**: A new pull request has been opened by ${user}.\nView here: ${prUrl}`;
+    let message = `**GitHub**: A new pull request has been opened by ${user}.\nView here: <${prUrl}>`;
     
     // Loop through all guilds and send the message
     client.guilds.cache.array().forEach(guild => {
