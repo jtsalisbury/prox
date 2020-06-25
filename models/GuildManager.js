@@ -46,7 +46,8 @@ class GuildManager {
                     creatorId: mongoose.Schema.Types.String,
                     eventPassed: mongoose.Schema.Types.Boolean
                 }],
-                statistics: mongoose.Schema.Types.Mixed
+                statistics: mongoose.Schema.Types.Mixed,
+                externalMessageChannelId: mongoose.Schema.Types.String
             });
 
             this.Guild = mongoose.model('Guild', this.guildSchema);
@@ -95,8 +96,6 @@ class GuildManager {
     getGuild(guildId) {
         return this.guildCache.get(guildId);
     }
-
-    //TODO: Some sort of getGuildValue where a string is passed that resolves to a location
 }
 
 module.exports = new GuildManager();

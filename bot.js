@@ -1,5 +1,11 @@
 require('dotenv').config();
-require('module-alias/register')
+require('module-alias/register');
+
+let express = require('express');
+let app = express();
+
+let GithubWebHook = require('express-github-webhook');
+let bodyParser = require('body-parser');
 
 let Discord = require('discord.js');
 let client = new Discord.Client();
@@ -69,7 +75,7 @@ client.on('ready', async () => {
     logger.info(client.user.username + ' - (' + client.user.id + ')');
 
     await GuildManager.connect();
-    
+
     // Make sure we get up to date documents on each guild
     let guildPromises = [];
     client.guilds.cache.array().forEach(guild => {
@@ -91,7 +97,7 @@ client.on('ready', async () => {
 // Save every five minutes
 let guilds = [];
 
-EventService.on('cbot.guildsLoaded', function(loaded) {
+EventService.on('cbot.guildsLoaded', function (loaded) {
     guilds = loaded;
     function saveGuilds() {
         console.log('Saving guilds...');
@@ -144,7 +150,7 @@ client.on('message', async message => {
     if (message.author.bot) {
         return;
     }
-    
+
     if (!message.channel.permissionsFor(message.guild.me).has('SEND_MESSAGES', false)) {
         return;
     }
@@ -154,7 +160,7 @@ client.on('message', async message => {
             return;
         }
     }
-    
+
     // Our client needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     let content = message.content;
@@ -189,3 +195,62 @@ client.on('message', async message => {
         guild.markModified('statistics.messages');
     }
 });
+
+// GitHub webhook handlers
+let webhookHandler = GithubWebHook({ path: '/hooks', secret: process.env.GITHUB_SECRET });
+
+app.use(bodyParser.json());
+app.use(webhookHandler);
+
+// Status updates
+app.get('/', (req, res) => {
+    res.send('Server is up!');
+});
+
+webhookHandler.on('pull_request', (repo, data) => {
+    //process.env.GITHUB_SECRET
+    if (!client) {
+        return;
+    }
+
+    if (data.action != 'opened') {
+        return;
+    }
+
+    // Get data for the message
+    let user = data.pull_request.user.login;
+    let prUrl = data.pull_request.url;
+    let message = `**GitHub**: A new pull request has been opened by ${user}.\nView here: ${prUrl}`;
+    
+    // Loop through all guilds and send the message
+    client.guilds.cache.array().forEach(guild => {
+        let guildState = GuildManager.getGuild(guild.id)
+
+        if (!guildState) {
+            return;
+        }
+
+        if (guildState.externalMessageChannelId && guildState.externalMessageChannelId.length > 0) {
+            MessageService.messageChannelById(message, guild, guildState.externalMessageChannelId);
+        }
+    })
+
+    res.status(200).send();
+});
+
+// Start our express server
+if (process.env.DEBUG_MODE) {
+    let server = app.listen(9000, process.env.DEBUG_IP, () => {
+        var host = server.address().address;
+        var port = server.address().port;
+        
+        console.log('Listening at %s:%s', host, port)
+    })
+} else {
+    let server = app.listen(9000, () => {
+        var host = server.address().address;
+        var port = server.address().port;
+        
+        console.log('Listening at %s:%s', host, port)
+    })
+}

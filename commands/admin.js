@@ -1,4 +1,22 @@
 let ROLES = require('@services/utils').getRoles();
+let GuildManager = require('@models/GuildManager');
+
+let defaultMessage = {};
+defaultMessage.aliases = ['setext'];
+defaultMessage.prettyName = 'Set External Message Channel';
+defaultMessage.help = 'Sets the default message channel for external messages';
+defaultMessage.userPermissions = ['MANAGE_GUILD'];
+defaultMessage.callback = async function(message) {
+    let guild = await GuildManager.getGuild(message.guild.id);
+
+    if (guild) {
+        guild.externalMessageChannelId = message.channel.id;
+
+        return 'Successfully updated external message channel';
+    }
+
+    return 'The guild manager could not find the guild';
+}
 
 let kick = {};
 kick.aliases = ['kick'];
@@ -55,4 +73,4 @@ purge.callback = async function(message, count) {
     message.channel.bulkDelete(messages);
 }
 
-module.exports.commands = [kick, purge];
+module.exports.commands = [defaultMessage, kick, purge];
