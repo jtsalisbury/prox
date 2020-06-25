@@ -208,7 +208,6 @@ app.get('/', (req, res) => {
 });
 
 webhookHandler.on('pull_request', (repo, data) => {
-    //process.env.GITHUB_SECRET
     if (!client) {
         return;
     }
