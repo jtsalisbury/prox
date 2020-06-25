@@ -234,8 +234,6 @@ webhookHandler.on('pull_request', (repo, data) => {
             MessageService.messageChannelById(message, guild, guildState.externalMessageChannelId);
         }
     })
-
-    res.status(200).send();
 });
 
 // Start our express server
