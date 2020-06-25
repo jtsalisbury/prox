@@ -16,7 +16,7 @@
         "express": "^4.17.1",
         "express-github-webhook": "^1.0.6",
         "ffmpeg": "0.0.4",
-        "ffmpeg-static": "^3.0.0",
+        "ffmpeg-static": "^4.0.0",
         "libsodium-wrappers": "^0.7.6",
         "mathjs": "^6.6.5",
         "module-alias": "^2.2.2",
