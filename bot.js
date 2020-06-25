@@ -247,7 +247,7 @@ if (process.env.DEBUG_MODE) {
         console.log('Listening at %s:%s', host, port)
     })
 } else {
-    let server = app.listen(9000, () => {
+    let server = app.listen(process.env.PORT, () => {
         var host = server.address().address;
         var port = server.address().port;
         
