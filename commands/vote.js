@@ -18,7 +18,7 @@ create.params = [
         type: 'string'
     }
 ];
-
+create.executeViaIntegration = false;
 let voteInfo = {};
 create.callback = function(message, text, option1, option2) {
     let channelId = message.channel.id;
@@ -69,6 +69,7 @@ vote.params = [
         type: 'string'
     }
 ];
+vote.executeViaIntegration = true;
 vote.callback = function(message, option) {
     let channelId = message.channel.id;
     let voteObj = voteInfo[channelId];
@@ -106,6 +107,7 @@ deleteVote.aliases = ['endvote'];
 deleteVote.prettyName = 'End Vote';
 deleteVote.help = 'Ends the active vote in the channel';
 deleteVote.roles = [ROLES.ADMIN, ROLES.MOD];
+deleteVote.executeViaIntegration = false;
 deleteVote.callback = function(message) {
     let voteObj = voteInfo[message.channel.id];
 

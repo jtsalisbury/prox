@@ -16,6 +16,7 @@ let constructParamHelp = function(cmdObj) {
 let help = {};
 help.aliases = ['help'];
 help.prettyName = 'Help';
+help.executeViaIntegration = false;
 help.help = 'Prints a list of the commands and their purpose';
 
 help.callback = function(message) {
@@ -38,13 +39,18 @@ help.callback = function(message) {
         helpStr += '\n';
     });
 
-    MessageService.sendMessage(helpStr, message.author);
+    if (message.author) {
+        MessageService.sendMessage(helpStr, message.author);
+    } else {
+        return helpStr;
+    }
 }
 
 let cmdHelp = {};
 cmdHelp.aliases = ['cmdhelp'];
 cmdHelp.prettyName = 'Command Help';
 cmdHelp.help = 'Prints detailed information about a command';
+cmdHelp.executeViaIntegration = false;
 cmdHelp.params = [
     {
         name: 'command',
@@ -76,6 +82,12 @@ cmdHelp.callback = function(message, command) {
     
     // sendMessage a PM to the user
     MessageService.sendMessage(helpStr, message.author);
+
+    if (message.author) {
+        MessageService.sendMessage(helpStr, message.author);
+    } else {
+        return helpStr;
+    }
 }
 
 module.exports.commands = [help, cmdHelp];

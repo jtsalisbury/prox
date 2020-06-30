@@ -10,6 +10,7 @@ getStat.params = [{
     name: 'statistic',
     type: 'string'
 }]
+getStat.executeViaIntegration = true;
 getStat.callback = function (message, stat) {
     stat = stat.toLowerCase();
 

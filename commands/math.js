@@ -4,6 +4,7 @@ let calc = {};
 calc.aliases = ['calc', 'calculate'];
 calc.prettyName = 'Calculate';
 calc.help = 'Evaluate a math expression';
+calc.executeViaIntegration = true;
 calc.params = [
     {
         name: 'expression',

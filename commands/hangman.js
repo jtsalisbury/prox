@@ -175,6 +175,7 @@ let hangman = {};
 hangman.aliases = ['hangman'];
 hangman.prettyName = 'Hangman';
 hangman.help = 'Controls hangman';
+hangman.executeViaIntegration = false;
 hangman.params = [
     {
         name: 'action (create, stop)',

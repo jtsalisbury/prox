@@ -20,6 +20,7 @@ translate.params = [
         type: 'string'
     }
 ];
+translate.executeViaIntegration = true;
 translate.callback = async function(_, src, dest, text) {
 	if (codes.indexOf(src) === -1 || codes.indexOf(dest) === -1) {
        return 'Invalid language codes';

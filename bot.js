@@ -47,7 +47,8 @@ glob.sync('./commands/*.js').forEach(file => {
             cmdData.help,
             cmdData.callback,
             cmdData.userPermissions,
-            cmdData.executePermissions
+            cmdData.executePermissions,
+            cmdData.executeViaIntegration
         );
 
         // Don't forget parameters!
@@ -145,9 +146,9 @@ client.on('guildDelete', guild => {
     })
 });
 
-// We have a new message
-client.on('message', async message => {
-    if (message.author.bot) {
+// Helper function to process a message
+let processMessage = async function(message, external = false) {
+    if (message.author && message.author.bot) {
         return;
     }
 
@@ -170,7 +171,7 @@ client.on('message', async message => {
 
         parts.shift();
 
-        let response = await CommandHandler.executeCommand(alias, message, parts);
+        let response = await CommandHandler.executeCommand(alias, message, parts, external);
 
         // If we should print a message
         if (response) {
@@ -181,6 +182,10 @@ client.on('message', async message => {
     // Record the number of times a user messages
     let guild = GuildManager.getGuild(message.guild.id);
     if (guild) {
+        if (!message.author) {
+            return;
+        }
+
         let userId = message.author.id;
         let messages = _utils.resolve(guild, 'statistics.messages');
 
@@ -194,6 +199,11 @@ client.on('message', async message => {
         messages[userId] = newCount;
         guild.markModified('statistics.messages');
     }
+}
+
+// We have a new message
+client.on('message', async message => {
+    await processMessage(message);
 });
 
 // GitHub webhook handlers
@@ -234,6 +244,88 @@ webhookHandler.on('pull_request', (repo, data) => {
         }
     })
 });
+
+// Identify our integrations by hashing their secrets, then syncing them to the guild id they're a part of
+let integrationCache = new Map();
+EventService.on('cbot.guildsLoaded', guilds => {
+    guilds.forEach(guild => {
+        guild.integrations.forEach(integration => {
+            integrationCache.set(integration.signature, guild.guildId);
+        })
+    })
+});
+
+EventService.on('cbot.integrationAdded', data => {
+    if (process.env.DEBUG_MODE) {
+        console.log(data.integration.signature);
+    }
+    integrationCache.set(data.integration.signature, data.guildId);
+})
+
+// Process messages TO our bot
+app.post('/message', async (req, res) => {
+    let token = req.header('X-CBOT-Signature');
+
+    // Verify fields set
+    // Note: Content-type: application/json needs set
+    if (!req.body.sender || !req.body.message) {
+        res.sendStatus(422).send();
+        return;
+    }
+
+    if (token) {
+        token = token.toLowerCase();
+    }
+    
+    // Verify authorization 
+    if (token.length == 0 || !integrationCache.get(token)) {
+        res.sendStatus(500).send();
+        return;
+    }
+
+
+    // Verify the guild exists
+    let guild = GuildManager.getGuild(integrationCache.get(token));
+    if (!guild) {
+        res.sendStatus(500).send();
+        return;
+    }
+
+    // Get the integration data
+    let intData = guild.integrations.find(element => element.signature === token);
+    if (!intData) {
+        res.sendStatus(500).send();
+        return;
+    }
+
+    // Verify discord guild exists
+    let discordGuild = client.guilds.cache.array().find(element => element.id == guild.guildId);
+    if (!discordGuild) {
+        res.sendStatus(500).send();
+        return;
+    }
+
+    // Verify discord channel exists
+    let discordChannel = discordGuild.channels.cache.array().find(element => element.id == intData.channelId);
+    if (!discordChannel) {
+        res.sendStatus(500).send();
+        return;
+    }
+
+    MessageService.sendMessage(req.body.sender + ': ' + req.body.message, discordChannel);
+
+    // Construct a *somewhat* correct message object
+    let message = {
+        channel: discordChannel,
+        guild: discordGuild,
+        content: req.body.message
+    }
+
+    // Process the message!
+    processMessage(message, true);
+    res.sendStatus(200).send();
+});
+
 
 // Start our express server
 if (process.env.DEBUG_MODE) {

@@ -6,6 +6,7 @@ let stb = {};
 stb.aliases = ['stb', 'spin'];
 stb.prettyName = 'Spin The Bottle';
 stb.help = 'Spin the bottle';
+stb.executeViaIntegration = false;
 stb.params = []
 stb.callback = function(message) {
     // Get members who are online, not bots
@@ -31,8 +32,9 @@ truth.aliases = ['truth'];
 truth.prettyName = 'Truth';
 truth.help = 'Get a random truth';
 truth.params = []
+truth.executeViaIntegration = true;
 truth.callback = function(message) {
-    return `> <@${message.author.id}> chose truth\n` + truths[Math.floor(Math.random() * truths.length)];
+    return `> Your truth\n` + truths[Math.floor(Math.random() * truths.length)];
 }
 
 let dare = {};
@@ -40,8 +42,9 @@ dare.aliases = ['dare'];
 dare.prettyName = 'Dare';
 dare.help = 'Get a random dare';
 dare.params = []
+dare.executeViaIntegration = true;
 dare.callback = function(message) {
-    return  `> <@${message.author.id}> chose dare\n` + dares[Math.floor(Math.random() * dares.length)];
+    return  `> Your dare\n` + dares[Math.floor(Math.random() * dares.length)];
 }
 
 let mfkCache = {};
@@ -169,6 +172,7 @@ mfk.params = [{
     type: "member",
     optional: true
 }]
+mfk.executeViaIntegration = false;
 mfk.callback = function(message, marry, fuck, kill) {
     if (!marry) {
         return newMFK(message);

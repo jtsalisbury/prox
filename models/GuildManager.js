@@ -47,7 +47,15 @@ class GuildManager {
                     eventPassed: mongoose.Schema.Types.Boolean
                 }],
                 statistics: mongoose.Schema.Types.Mixed,
-                externalMessageChannelId: mongoose.Schema.Types.String
+                externalMessageChannelId: mongoose.Schema.Types.String,
+                integrations: [{
+                    channelId: mongoose.Schema.Types.String,
+                    signature: mongoose.Schema.Types.String,
+                    syncMessages: mongoose.Schema.Types.Boolean,
+                    syncIP: mongoose.Schema.Types.String,
+                    syncPort: mongoose.Schema.Types.Number,
+                    integrationId: mongoose.Schema.Types.Number
+                }]
             });
 
             this.Guild = mongoose.model('Guild', this.guildSchema);

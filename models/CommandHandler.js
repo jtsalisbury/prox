@@ -9,14 +9,14 @@ class CommandHandler {
         this.aliasReference = new Map(); // reference aliases to base
     }
 
-    registerCommand (aliases, name, help, cback, userPerms, execPerms) {
+    registerCommand (aliases, name, help, cback, userPerms, execPerms, external) {
         let usableAliases = aliases;
         if (!Array.isArray(aliases)) {
             usableAliases = [aliases];
         }
 
         // Create a new command object
-        let cmd = new Command(usableAliases, name, help, cback, userPerms, execPerms);
+        let cmd = new Command(usableAliases, name, help, cback, userPerms, execPerms, external);
 
         // Register for each alias
         usableAliases.forEach(alias => {
@@ -31,10 +31,15 @@ class CommandHandler {
 
     // Will return false if either 1) the user doesn't have a specified perm or 2) the bot doesn't
     // The user and bot must have all of each permissions
-    canExecute(message, command) {
-        let userPermsPassed = message.member.hasPermission(command.getUserPermissions());
+    canExecute(message, command, isExternal, canBeUsedExternally) {
+        if (isExternal && !canBeUsedExternally) {
+            return 'This command can\'t be ran from outside of Discord';
+        }
+        
+        // Only non-secure functions are exposed externally
+        let userPermsPassed = isExternal ? true : message.member.hasPermission(command.getUserPermissions());
         let clientPermsPassed = message.channel.permissionsFor(message.guild.me).has(command.getExecPermissions(), false);
-
+        
         if (!userPermsPassed) {
             return 'You don\'t have permission for this';
         }
@@ -45,7 +50,7 @@ class CommandHandler {
         return true
     }
 
-    async executeCommand(alias, message, parsedLine) {
+    async executeCommand(alias, message, parsedLine, isExternal) {
         let activeCommand = this.getCommand(alias);
 
         if (!activeCommand) {
@@ -53,7 +58,7 @@ class CommandHandler {
             return;
         }
 
-        let canExec = this.canExecute(message, activeCommand);
+        let canExec = this.canExecute(message, activeCommand, isExternal, activeCommand.getExternal());
         if (canExec !== true) {
             MessageService.sendMessage(canExec, message.channel)
             return;

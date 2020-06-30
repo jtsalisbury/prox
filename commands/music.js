@@ -14,12 +14,18 @@ const ytsearchProm = utils.promisify(ytsearch);
 let serverQueues = new Map();
 
 let verifyChannelPerms = function(message) {
+    if (!message.member) {
+        return false;
+    }
+
     // Verify that the user is in a voice channel
     let voiceCh = message.member.voice.channel;
     if (!voiceCh) {
         MessageService.sendMessage('You need to be in a voice channel to play music', message.channel);
-        return;
+        return false;
     }
+
+    return true;
 }
 
 let getServerQueue = function(guildId) {
@@ -132,6 +138,7 @@ volume.params = [
         type: 'number'
     }
 ];
+volume.executeViaIntegration = true;
 volume.callback = function(message, volume) {
     if (volume < 0 || volume > 100) {
         return 'Invalid number. Volume should be between 0 and 100';
@@ -250,15 +257,14 @@ play.params = [
         type: 'string'
     }
 ];
+play.executeViaIntegration = true;
 play.executePermissions = ['SPEAK', 'CONNECT'];
 play.callback = async function(message, descriptor) {
-    verifyChannelPerms(message);
-
-    let songs = await getSongs(descriptor, message.guild.id);    
-
     // If there's a server queue add the song
     let queue = serverQueues.get(message.guild.id);
     if (queue) {
+        let songs = await getSongs(descriptor, message.guild.id);    
+
         // Update the queue to have the playing song at the beginning, the playlist of new songs, followed by the old queue
         queue.songs = [queue.songs[0]].concat(songs, queue.songs.slice(1));
 
@@ -268,6 +274,12 @@ play.callback = async function(message, descriptor) {
 
         return `Added ${songs.length} songs to the queue`;
     }
+
+    if (!verifyChannelPerms(message)) {
+        return;
+    }
+
+    let songs = await getSongs(descriptor, message.guild.id);    
 
     // We need to create a new one!
     await createNewQueue(message, songs);
@@ -288,15 +300,14 @@ enqueue.params = [
         type: 'string'
     }
 ];
-play.executePermissions = ['SPEAK', 'CONNECT'];
+enqueue.executeViaIntegration = true;
+enqueue.executePermissions = ['SPEAK', 'CONNECT'];
 enqueue.callback = async function(message, descriptor) {
-    verifyChannelPerms(message);
-
-    let songs = await getSongs(descriptor, message.guild.id);    
-
     // If there's a server queue add the song
     let queue = serverQueues.get(message.guild.id);
     if (queue) {
+        let songs = await getSongs(descriptor, message.guild.id);    
+
         queue.songs = queue.songs.concat(songs);
 
         if (songs.length === 1) {
@@ -305,6 +316,12 @@ enqueue.callback = async function(message, descriptor) {
 
         return `**${songs.length}** songs have been added to the queue`;
     }
+
+    if (!verifyChannelPerms(message)) {
+        return;
+    }
+
+    let songs = await getSongs(descriptor, message.guild.id);    
 
     // We need to create a new one!
     await createNewQueue(message, songs);
@@ -317,6 +334,7 @@ let dequeue = [];
 dequeue.aliases = ['remove', 'r'];
 dequeue.prettyName = 'Dequeue Song';
 dequeue.help = 'Removes the next song from the queue';
+dequeue.executeViaIntegration = true;
 dequeue.callback = function(message) {
     let guildId = message.guild.id;
 
@@ -347,6 +365,7 @@ let skip = {};
 skip.aliases = ['skip'];
 skip.prettyName = 'Skip Song';
 skip.help = 'Skips the currently playing song';
+skip.executeViaIntegration = true;
 skip.callback = function(message) {
     let guildId = message.guild.id;
 
@@ -363,6 +382,7 @@ let stop = {};
 stop.aliases = ['stop'];
 stop.prettyName = 'Stop Song';
 stop.help = 'Clears the queue and stops the currently playing song';
+stop.executeViaIntegration = true;
 stop.callback = function(message) {
     let guildId = message.guild.id;
 
@@ -382,6 +402,7 @@ let clear = {};
 clear.aliases = ['clear'];
 clear.prettyName = 'Clear Queue';
 clear.help = 'Clears the queue but keeps playing the current song';
+clear.executeViaIntegration = true;
 clear.callback = function(message) {
     let guildId = message.guild.id;
 
@@ -400,6 +421,7 @@ let pause = {};
 pause.aliases = ['pause'];
 pause.prettyName = ['Pause Stream'];
 pause.help = 'Pauses the stream';
+pause.executeViaIntegration = true;
 pause.callback = function(message) {
     let guildId = message.guild.id;
 
@@ -418,6 +440,7 @@ let resume = {};
 resume.aliases = ['resume'];
 resume.prettyName = 'Resume Stream';
 resume.help = 'Resumes the stream';
+resume.executeViaIntegration = true;
 resume.callback = function(message) {
     let guildId = message.guild.id;
 
@@ -440,6 +463,7 @@ let getQueue = {};
 getQueue.aliases = ['queue'];
 getQueue.prettyName = 'Queue';
 getQueue.help = 'Prints the first five songs of the queue';
+getQueue.executeViaIntegration = true;
 getQueue.callback = function(message) {
     let guildId = message.guild.id;
     

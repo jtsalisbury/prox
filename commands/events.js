@@ -26,6 +26,7 @@ create.params = [
     }
 ];
 create.executePermissions = ['MANAGE_CHANNELS', 'MANAGE_ROLES', 'MOVE_MEMBERS', 'MANAGE_MESSAGES'];
+create.executeViaIntegration = false;
 create.callback = async function(message, title, channelName, description, dateTime) {
     if (channelName.length > 16) {
         return 'Channel name is too long! Make sure it\'s less than 16 characters';
@@ -112,6 +113,7 @@ let cancel = {};
 cancel.aliases = ['cancel', 'end'];
 cancel.prettyName = 'End or cancel event';
 cancel.help = 'End or cancel an event. Must be executed in event channel. Only the creator or admin can end or cancel.'
+cancel.executeViaIntegration = false;
 cancel.callback = function(message) {
     let guild = GuildManager.getGuild(message.guild.id);
 
@@ -132,6 +134,7 @@ let leave = {};
 leave.aliases = ['leave'];
 leave.prettyName = 'Leave Event';
 leave.help = 'Leave an event. Must be executed in event channel.';
+leave.executeViaIntegration = false;
 leave.callback = function(message) {
     let guild = GuildManager.getGuild(message.guild.id);
 

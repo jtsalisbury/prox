@@ -10,6 +10,7 @@ define.params = [
         type: 'string'
     }
 ];
+define.executeViaIntegration = true;
 define.callback = async function(_, term) {
     let url = `http://api.urbandictionary.com/v0/define?term=${term}`;
     let result = await _utils.HTTPGet(url);
@@ -32,6 +33,7 @@ search.params = [
         type: 'string'
     }
 ];
+search.executeViaIntegration = true;
 search.callback = async function(_, term) {
     let getUrl = `https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/Search/WebSearchAPI?autoCorrect=true&pageNumber=1&pageSize=10&q=${term}&safeSearch=false`
     let headers = {

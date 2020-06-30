@@ -1,5 +1,5 @@
 class Command {
-    constructor(aliases, prettyName, help, callback, userPerms, execPerms) {
+    constructor(aliases, prettyName, help, callback, userPerms, execPerms, external) {
         this.aliases = aliases;
         this.prettyName = prettyName;
         this.help = help;
@@ -7,6 +7,7 @@ class Command {
         this.params = [];
         this.reqUserPerms = userPerms;
         this.reqExecPerms = execPerms;
+        this.canBeUsedExternally = external;
     }
 
     addParam(name, type, optional, def) {
@@ -61,6 +62,10 @@ class Command {
 
     getExecPermissions() {
         return this.reqExecPerms;
+    }
+
+    getExternal() {
+        return this.canBeUsedExternally;
     }
 }
 

@@ -6,6 +6,7 @@ defaultMessage.aliases = ['setext'];
 defaultMessage.prettyName = 'Set External Message Channel';
 defaultMessage.help = 'Sets the default message channel for external messages';
 defaultMessage.userPermissions = ['MANAGE_GUILD'];
+defaultMessage.executeViaIntegration = false;
 defaultMessage.callback = async function(message) {
     let guild = await GuildManager.getGuild(message.guild.id);
 
@@ -36,6 +37,7 @@ kick.params = [
 ];
 kick.userPermissions = ['KICK_MEMBERS'];
 kick.executePermissions = ['KICK_MEMBERS'];
+kick.executeViaIntegration = false;
 kick.callback = async function(message, target, reason) {
     let member = message.mentions.members.first() || message.guild.members.get(target);
     if (!member) {
@@ -64,6 +66,7 @@ purge.params = [
 ];
 purge.userPermissions = ['MANAGE_MESSAGES'];
 purge.executePermissions = ['MANAGE_MESSAGES'];
+purge.executeViaIntegration = false;
 purge.callback = async function(message, count) {
     if (count < 2 || count > 100) {
         return 'Please provide a number between 2 and 100';

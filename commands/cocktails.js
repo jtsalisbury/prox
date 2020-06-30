@@ -44,6 +44,7 @@ cocktail.params = [
         optional: true
     }
 ]
+cocktail.executeViaIntegration = true;
 cocktail.callback = async function(_, search, showAll) {
     let result;
 
