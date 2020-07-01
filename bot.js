@@ -264,7 +264,22 @@ EventService.on('cbot.integrationAdded', data => {
         console.log(data.integration.signature);
     }
     integrationCache.set(data.integration.signature, data.guildId);
-})
+});
+
+// For use with validation integrations
+app.get('/auth', async (req, res) => {
+    let token = req.header('X-CBOT-Signature');
+    if (!token || !integrationCache.get(token.toLowerCase)) {
+        res.status(500).send(JSON.stringify({
+            response: "token not set"
+        }));
+        return 
+    }
+
+    res.status(200).send(JSON.stringify({
+        response: 'valid authorization'
+    }));
+});
 
 // Process messages TO our bot
 app.post('/message', async (req, res) => {
@@ -273,7 +288,7 @@ app.post('/message', async (req, res) => {
     // Verify fields set
     // Note: Content-type: application/json needs set
     if (!req.body.sender || !req.body.message) {
-        res.sendStatus(422).send();
+        res.status(422).send();
         return;
     }
 
@@ -283,36 +298,35 @@ app.post('/message', async (req, res) => {
     
     // Verify authorization 
     if (token.length == 0 || !integrationCache.get(token)) {
-        res.sendStatus(500).send();
+        res.status(500).send();
         return;
     }
-
 
     // Verify the guild exists
     let guild = GuildManager.getGuild(integrationCache.get(token));
     if (!guild) {
-        res.sendStatus(500).send();
+        res.status(500).send();
         return;
     }
 
     // Get the integration data
     let intData = guild.integrations.find(element => element.signature === token);
     if (!intData) {
-        res.sendStatus(500).send();
+        res.status(500).send();
         return;
     }
 
     // Verify discord guild exists
     let discordGuild = client.guilds.cache.array().find(element => element.id == guild.guildId);
     if (!discordGuild) {
-        res.sendStatus(500).send();
+        res.status(500).send();
         return;
     }
 
     // Verify discord channel exists
     let discordChannel = discordGuild.channels.cache.array().find(element => element.id == intData.channelId);
     if (!discordChannel) {
-        res.sendStatus(500).send();
+        res.status(500).send();
         return;
     }
 
