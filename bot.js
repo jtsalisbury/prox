@@ -175,7 +175,7 @@ let processMessage = async function(message, external = false) {
 
         // If we should print a message
         if (response) {
-            MessageService.sendMessage(response, message.channel);
+            return response;
         }
     }
 
@@ -203,7 +203,11 @@ let processMessage = async function(message, external = false) {
 
 // We have a new message
 client.on('message', async message => {
-    await processMessage(message);
+    let response = await processMessage(message);
+
+    if (response) {
+        MessageService.sendMessage(response, message.channel);
+    }
 });
 
 // GitHub webhook handlers
@@ -312,7 +316,7 @@ app.post('/message', async (req, res) => {
         return;
     }
 
-    MessageService.sendMessage(req.body.sender + ': ' + req.body.message, discordChannel);
+    MessageService.sendMessage(`**${req.body.sender}:** `+ req.body.message, discordChannel);
 
     // Construct a *somewhat* correct message object
     let message = {
@@ -321,9 +325,15 @@ app.post('/message', async (req, res) => {
         content: req.body.message
     }
 
-    // Process the message!
-    processMessage(message, true);
-    res.sendStatus(200).send();
+    let resMsg = await processMessage(message, true);
+
+    let response = {
+        response: resMsg ? resMsg : "none"
+    }
+
+    MessageService.sendMessage(resMsg, discordChannel);
+    
+    res.status(200).send(JSON.stringify(response));
 });
 
 
