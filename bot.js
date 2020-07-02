@@ -403,8 +403,11 @@ require("socketio-auth")(io, {
             token = token.toLowerCase();
         }
 
+        console.log("Client authenticating with " + token);
+
         // Need to verify that the token is valid
         if (!token || integrationCache.get(token) == undefined ) {
+            console.log("Client failed to authenticate");
             return callback(new Error('token not valid or guilds not loaded'));
         }
 
