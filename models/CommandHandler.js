@@ -83,11 +83,11 @@ class CommandHandler {
 
             let converted = this.convertToParamType(paramData.type, curVal, message.guild.members);
 
-            if (converted === undefined && !paramData.optional) {
+            if ((converted === undefined || converted == null) && !paramData.optional) {
                 MessageService.sendMessage('Invalid value for ' + paramData.name, message.channel);
                 validParams = false;
-            } else if (converted === undefined && paramData.optional) {
-                parsedLine[parseIndex] = paramData.default || null;
+            } else if ((converted === undefined || converted == null) && paramData.optional) {
+                parsedLine[parseIndex] = paramData.default != undefined ? paramData.default : null;
                 converted = parsedLine[parseIndex];
             }
             

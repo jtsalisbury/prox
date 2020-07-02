@@ -21,6 +21,8 @@ let CommandHandler = require('@models/CommandHandler');
 let GuildManager = require('@models/GuildManager');
 let MessageService = require('@services/message');
 
+let ws = require('ws');
+
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
 
@@ -148,6 +150,28 @@ client.on('guildDelete', guild => {
 
 // Helper function to process a message
 let processMessage = async function(message, external = false) {
+    if (message.author) {
+        // Loop through our cache of integrations to sync messages
+        // We only do this if we have a valid author (message from discord!)
+        integrationCache.forEach(integration => {
+            let intNameLen = integration.name.length;
+            // If we don't want to sync messages OR the message was from our bot and the integration name matches the prefix
+            if (!integration.sync || (message.author.bot && message.content.substr(0, intNameLen + 2) == `[${integration.name}]`)) {
+                return;
+            }
+
+            // For this channel, if the integration matches, go ahead and send it!
+            if (message.channel.id == integration.channelId) {
+                for (let socketId in integration.connections) {
+                    integration.connections[socketId].emit('message', {
+                        sender: message.author.username, 
+                        content: message.content 
+                    });
+                }
+            }
+        });
+    }
+
     if (message.author && message.author.bot) {
         return;
     }
@@ -254,19 +278,32 @@ let integrationCache = new Map();
 EventService.on('cbot.guildsLoaded', guilds => {
     guilds.forEach(guild => {
         guild.integrations.forEach(integration => {
-            integrationCache.set(integration.signature, guild.guildId);
+            integrationCache.set(integration.signature, {
+                guildId: guild.guildId,
+                channelId: integration.channelId, 
+                sync: integration.syncMessages,
+                name: integration.integrationName,
+                connections: {} 
+            });
         })
     })
 });
 
+// Cache integrations and connections
 EventService.on('cbot.integrationAdded', data => {
     if (process.env.DEBUG_MODE) {
         console.log(data.integration.signature);
     }
-    integrationCache.set(data.integration.signature, data.guildId);
+    integrationCache.set(data.integration.signature, {
+        guildId: data.guildId, 
+        channelId: data.channelId,
+        sync: data.integration.syncMessages,
+        name: data.integration.integrationName,
+        connections: {} 
+    });
 });
 
-// For use with validation integrations
+// For use with validation integrations via HTTP
 app.get('/auth', async (req, res) => {
     let token = req.header('X-CBOT-Signature');
     if (!token || !integrationCache.get(token.toLowerCase)) {
@@ -281,89 +318,146 @@ app.get('/auth', async (req, res) => {
     }));
 });
 
-// Process messages TO our bot
-app.post('/message', async (req, res) => {
-    let token = req.header('X-CBOT-Signature');
-
+// Helper which wraps processMessage to handle integrations via HTTP and socket connections
+let handleIntegration = async function(token, sender, message) {
     // Verify fields set
     // Note: Content-type: application/json needs set
-    if (!req.body.sender || !req.body.message) {
-        res.status(422).send();
-        return;
+    if (!sender || !message) {
+        return false;
     }
 
-    if (token) {
-        token = token.toLowerCase();
-    }
-    
     // Verify authorization 
-    if (token.length == 0 || !integrationCache.get(token)) {
-        res.status(500).send();
-        return;
+    if (token.length == 0 || integrationCache.get(token) == undefined) {
+        return false;
     }
 
     // Verify the guild exists
-    let guild = GuildManager.getGuild(integrationCache.get(token));
+    let guild = GuildManager.getGuild(integrationCache.get(token).guildId);
     if (!guild) {
-        res.status(500).send();
-        return;
+        return false;
     }
 
     // Get the integration data
-    let intData = guild.integrations.find(element => element.signature === token);
+    let intData = integrationCache.get(token);
     if (!intData) {
-        res.status(500).send();
-        return;
+        return false;
     }
 
     // Verify discord guild exists
     let discordGuild = client.guilds.cache.array().find(element => element.id == guild.guildId);
     if (!discordGuild) {
-        res.status(500).send();
-        return;
+        return false;
     }
 
     // Verify discord channel exists
     let discordChannel = discordGuild.channels.cache.array().find(element => element.id == intData.channelId);
     if (!discordChannel) {
+        return false;
+    }
+
+    MessageService.sendMessage(`[${intData.name}] **${sender}:** `+ message, discordChannel);
+
+    // Construct a *somewhat* correct message object
+    let msgObj = {
+        channel: discordChannel,
+        guild: discordGuild,
+        content: message
+    }
+
+    let resMsg = await processMessage(msgObj, true);   
+
+    if (resMsg) {
+        MessageService.sendMessage(resMsg, discordChannel);
+    }
+
+    return resMsg ? resMsg : "none";
+}
+
+// Process messages TO our bot via HTTP
+app.post('/message', async (req, res) => {
+    let token = req.header('X-CBOT-Signature');
+
+    if (token) {
+        token = token.toLowerCase();
+    }
+
+    let result = await handleIntegration(token, req.body.sender, req.body.message);
+    if (!result) {
         res.status(500).send();
         return;
     }
 
-    MessageService.sendMessage(`**${req.body.sender}:** `+ req.body.message, discordChannel);
-
-    // Construct a *somewhat* correct message object
-    let message = {
-        channel: discordChannel,
-        guild: discordGuild,
-        content: req.body.message
-    }
-
-    let resMsg = await processMessage(message, true);
-
-    let response = {
-        response: resMsg ? resMsg : "none"
-    }
-
-    MessageService.sendMessage(resMsg, discordChannel);
-    
-    res.status(200).send(JSON.stringify(response));
+    res.status(200).send(JSON.stringify({
+        response: result
+    }));
 });
 
+// Socket connections
+const server = require("http").createServer(app);
+const io = require("socket.io")(server);
+require("socketio-auth")(io, {
+    authenticate: (socket, data, callback) => {
+        let token = data.signature;
 
-// Start our express server
-if (process.env.DEBUG_MODE) {
-    let server = app.listen(9000, process.env.DEBUG_IP, () => {
-        var host = server.address().address;
-        var port = server.address().port;
-        
-        console.log('Listening at %s:%s', host, port)
-    })
-} else {
-    let server = app.listen(process.env.PORT, () => {
-        var host = server.address().address;
-        var port = server.address().port;
-        
-        console.log('Listening at %s:%s', host, port)
-    })
-}
+        if (token) {
+            token = token.toLowerCase();
+        }
+
+        // Need to verify that the token is valid
+        if (!token || integrationCache.get(token) == undefined ) {
+            return callback(new Error('token not valid or guilds not loaded'));
+        }
+
+        return callback(null, true);
+    },
+    postAuthenticate: (socket, data) => {
+        // Store the authorization on the socket so we don't have to constantly send it
+        socket.authorization = data.signature.toLowerCase();
+
+        // Add our new socket in our integrations cache
+        // Since we've already verified the token exists, we can just use it
+        let intData = integrationCache.get(socket.authorization);
+
+        intData.connections[socket.id] = socket;
+
+        // Handle when we get a new message from a client
+        socket.on("message", async (data) => {
+            let result = await handleIntegration(socket.authorization, data.sender, data.content);
+
+            if (!result) {
+                socket.emit("response", {
+                    success: false, 
+                    error: "unable to perform request"
+                });
+                return;
+            }
+
+            socket.emit("response", {
+                success: true,
+                content: result
+            });
+        });
+
+        console.log('Socket connection established');
+    },
+    disconnect: (socket) => {
+        if (!socket.authorization) {
+            return;
+        }
+
+        // Cleanup the cache
+        let token = socket.authorization;
+        let intData = integrationCache.get(token.toLowerCase());
+
+        if (intData == undefined) {
+            return;
+        }
+
+        delete intData.connections[socket.id];
+
+        console.log('Socket connection terminated');
+    },
+    timeout: (process.env.DEBUG_MODE ? 'none' : 1000)
+})
+
+server.listen(process.env.PORT);

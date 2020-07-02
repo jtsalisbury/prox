@@ -51,9 +51,8 @@ class GuildManager {
                 integrations: [{
                     channelId: mongoose.Schema.Types.String,
                     signature: mongoose.Schema.Types.String,
+                    integrationName: mongoose.Schema.Types.String,
                     syncMessages: mongoose.Schema.Types.Boolean,
-                    syncIP: mongoose.Schema.Types.String,
-                    syncPort: mongoose.Schema.Types.Number,
                     integrationId: mongoose.Schema.Types.Number
                 }]
             });
