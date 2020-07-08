@@ -21,8 +21,6 @@ let CommandHandler = require('@models/CommandHandler');
 let GuildManager = require('@models/GuildManager');
 let MessageService = require('@services/message');
 
-let ws = require('ws');
-
 glob.sync('./commands/*.js').forEach(file => {
     let required = require(path.resolve(file));
 

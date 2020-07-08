@@ -21,7 +21,7 @@
         "libsodium-wrappers": "^0.7.6",
         "mathjs": "^6.6.5",
         "module-alias": "^2.2.2",
-        "mongoose": "^5.9.20",
+        "mongoose": "^5.9.22",
         "node-opus": "^0.3.3",
         "opusscript": "0.0.7",
         "request": "^2.88.2",
