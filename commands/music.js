@@ -118,9 +118,17 @@ let createNewQueue = async function(message, songs) {
         playing: true
     };
 
-    // Try to join the voice channel
-    let conn = await message.member.voice.channel.join();
-    queue.connection = conn;
+
+    console.log(message);
+
+
+    if (message.guild.voice && message.guild.voice.connection) {
+        queue.connection = message.guild.voice.connection;
+    } else {
+        // Try to join the voice channel
+        let conn = await message.member.voice.channel.join();
+        queue.connection = conn;
+    }
 
     // Add the guild queue to the map
     serverQueues.set(message.guild.id, queue);
@@ -495,26 +503,24 @@ getQueue.callback = function(message) {
 
 module.exports.addHooks = function(client) {
     // Hook to see if we should stop playing music when everyone leaves the channel
-    /*client.on("voiceStateUpdate", function(oldMember){
+    client.on("voiceStateUpdate", function(oldState, newState){
         try {
-            let queue = getServerQueue(oldMember.guild.id);
+            let queue = getServerQueue(oldState.guild.id);
             if (!queue) {
-                MessageService.sendMessage('No active queue', queue.textChannel);
                 return;
             }
 
-            // Check to see if our user left a voice channel with the bot playing music
-            // Our bot will be the only one playing songs 
-            if (queue.voiceChannel.members.size == 1) {
+            // Our bot left!
+            if (oldState.member.displayName == "cbot" && newState.connection == null) {
                 queue.songs = [];
                 
-                MessageService.sendMessage('Everyone left the channel. Cleared the active queue and stopped playing all songs', queue.textChannel);
+                MessageService.sendMessage('We left the channel from another context, ending the queue', queue.textChannel);
                 
                 queue.connection.dispatcher.end();
             }
             
         } catch(e) {}    
-    });*/
+    });
 }
 
 module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume];

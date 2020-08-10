@@ -2,7 +2,6 @@
 let _utils = require('@services/utils');
 let fs = require('fs');
 let GuildManager = require('@models/GuildManager');
-let GoogleSpeech = require('@google-cloud/speech');
 let { Transform } = require('stream');
 
 let speechCache = new Map();
@@ -18,25 +17,30 @@ function buffToChan(buff) {
     return convBuff;
 }
 
-class ConvertTo1ChannelStream extends Transform {
-    constructor(source, options) {
-        super(options)
+async function createSpeechInstance(guildId, channel, connection) {
+    let data = {
+        channel: channel,
+        connection: connection
     }
-  
-    _transform(data, encoding, next) {
-        next(null, buffToChan(data))
+    
+    if (!connection) {
+        data.connection = await channel.join();
     }
+
+    speechCache.set(guildId, data);
 }
 
 let join = {};
 join.aliases = ['join'];
 join.prettyName = 'Join Voice Channel';
-join.help = 'Joins a voice channel';
+join.help = 'Joins a voice channel and prepares cbot to listen for voice input';
 join.callback = async function (message) {
-    if (message.member.voice.channel) {
-        await message.member.voice.channel.join();
+    if (speechCache.get(message.guild.id)) {
+        return 'Already actively listening for speech input';
+    }
 
-        speechCache.set(message.guild.id, message.member.voice.channel);
+    if (message.member.voice.channel) {
+        createSpeechInstance(message.guild.id, message.member.voice.channel, null);
 
         return 'Listening for voice input';
     }
@@ -49,31 +53,19 @@ leave.aliases = ['leave'];
 leave.prettyName = 'Leave Voice Channel';
 leave.help = 'Leaves a voice channel';
 leave.callback = function (message) {
-    let ch = speechCache.get(message.guild.id);
-    if (ch) {
-        ch.leave();
+    let data = speechCache.get(message.guild.id);
+    if (data) {
+        console.log(data);
+        data.channel.leave();
         return 'No longer listening for voice input';
     }
 
-    return 'Not actively listening';
-}
-
-let setReply = {};
-setReply.aliases = ['setreply'];
-setReply.prettyName = 'Set Reply Channel';
-setReply.help = 'Sets the current text channel to reply in';
-setReply.callback = function (message) {
-    let id = message.channel.id;
-
-    let guild = GuildManager.getGuild(message.guild.id);
-    guild.speech.replyChannelId = id;
-
-    return 'Speech reply channel set!';
+    return 'Not actively listening!';
 }
 
 let speechClient;
 module.exports.addHooks = function(client) {
-    client.on('ready', () => {
+    /*client.on('ready', () => {
         // Generate new google application credentials
         let content = new Buffer(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64');
         content = content.toString('ascii');
@@ -96,4 +88,30 @@ module.exports.addHooks = function(client) {
     })
 }
 
-module.exports.commands = [join, leave, setReply];*/
+module.exports.addHooks = function(client) {
+    // Hook to see if we should stop playing music when everyone leaves the channel
+    client.on("voiceStateUpdate", function(oldState, newState){
+        try {
+            let cache = speechCache.get(oldState.guild.id);
+            if (!cache) {
+                if (oldState.member.displayName == "cbot" && newState.channel) {
+                    createSpeechInstance(newState.guild.id, newState.channel, newState.connection);
+                }
+
+                return;
+            }
+
+            // Our bot left!
+            if (oldState.member.displayName == "cbot" && newState.connection == null) {
+                cache.songs = [];
+                
+                MessageService.sendMessage('We left the channel from another context, no longer listening for voice input', queue.textChannel);
+                
+                queue.connection.dispatcher.end();
+            }
+            
+        } catch(e) {}    
+    });
+}
+
+module.exports.commands = [join, leave];*/
