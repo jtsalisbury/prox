@@ -87,4 +87,19 @@ insult.callback = async function(message, user) {
     return res;
 }
 
-module.exports.commands = [ping, kys, git, gimme, say, insult];
+let trump = {};
+trump.aliases = ['trump'];
+trump.prettyName = 'Trump';
+trump.help = 'Gets a random Trump quote';
+trump.executeViaIntegration = false;;
+trump.callback = async function(message) {
+    let res = await _utils.HTTPGet('https://api.whatdoestrumpthink.com/api/v1/quotes/random');
+
+    if (!res || !res.message) {
+        return 'No quotes found';
+    }
+
+    return `**Donald Trump:** ${res.message}`;
+}
+
+module.exports.commands = [ping, kys, git, gimme, say, insult, trump];
