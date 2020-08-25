@@ -58,7 +58,7 @@ class VoiceManager {
                     return;
                 }
 
-                let validStarters = ['bot', 'hey bot', 'hey portal'];
+                let validStarters = ['bot', 'hey bot', 'hey cbot'];
                 for (let i = 0; i < validStarters.length; i++) {
                     let starter = validStarters[i];
 

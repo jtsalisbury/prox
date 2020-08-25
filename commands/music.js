@@ -408,7 +408,7 @@ stop.callback = function(message) {
 }
 
 let clear = {};
-clear.aliases = ['clear'];
+clear.aliases = ['clear', 'empty'];
 clear.prettyName = 'Clear Queue';
 clear.help = 'Clears the queue but keeps playing the current song';
 clear.executeViaIntegration = true;

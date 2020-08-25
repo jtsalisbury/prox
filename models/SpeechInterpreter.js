@@ -1,5 +1,5 @@
 let WitSpeech = require('node-witai-speech');
-let SoxCommand = require('sox-audio');
+let ffmpeg = require('fluent-ffmpeg');
 let fs = require('fs');
 let util = require('util');
 
@@ -18,33 +18,22 @@ class SpeechInterpreter {
 
     convertAudio(inFile, outFile) {
         return new Promise((resolve, reject) => {
-            let cmd = SoxCommand();
-            let reader = fs.createReadStream(inFile);
-            let writer = fs.createWriteStream(outFile);
+            let cmd = ffmpeg(inFile);
 
-            cmd.input(reader)
-                .inputSampleRate(48000)
-                .inputEncoding('signed')
-                .inputBits(16)
-                .inputChannels(2)
-                .inputFileType('raw')
-                .output(writer)
-                .outputSampleRate(16000)
-                .outputEncoding('signed')
-                .outputBits(16)
-                .outputChannels(1)
-                .outputFileType('wav');
+            cmd.inputFormat('s16le')
+                .inputOptions(['-f s16le', '-ar 48000', '-ac:a 2'])
+                .output(outFile)
+                .outputOptions(['-ar 16000', '-ac:a 1']);
 
             cmd.on('end', () => {
-                reader.close();
-                writer.close();
                 resolve();
             });
 
             cmd.on('error', (err, stdout, stderr) => {
-                console.log('Error: ' + err);
-                console.log('Sox standard out: ' + stdout);
-                console.log('Sox standard error: ' + stderr);
+                console.log('err: ' + err);
+                console.log('stdout: ' + stdout);
+                console.log('stderr: ' + stderr);
+
                 reject(err);
             });
 
@@ -55,9 +44,9 @@ class SpeechInterpreter {
     handleStream(stream) {
         return new Promise((resolve, reject) => {
             let key = this.getNextKey();
-            let filename = this.tempDir + 'audio_' + key + '_' + Date.now() + '.tmp';
+            let filename = this.tempDir + 'audio_' + key + '_' + Date.now() + '.pcm';
 
-            if (!fs.existsSync(this.tempDir)){
+            if (!fs.existsSync(this.tempDir)) {
                 fs.mkdirSync(this.tempDir);
             }
 
@@ -77,7 +66,7 @@ class SpeechInterpreter {
                     return reject("Audio stream was too short or too long. Length: " + duration);
                 }
 
-                let convName = filename.replace('tmp', 'wav');
+                let convName = filename.replace('pcm', 'wav');
 
                 await this.convertAudio(filename, convName);
 
@@ -89,7 +78,7 @@ class SpeechInterpreter {
     async interpret(stream) {
         return new Promise((resolve, reject) => {
             this.handleStream(stream).then(async convName => {
-                let originalFilename = convName.replace('wav', 'tmp');
+                let originalFilename = convName.replace('wav', 'pcm');
 
                 let extractSpeechIntent = util.promisify(WitSpeech.extractSpeechIntent);
 
@@ -101,6 +90,29 @@ class SpeechInterpreter {
                 fs.unlinkSync(originalFilename)
 
                 console.log(output);
+
+                if (output && 'entities' in output) {
+                    let preface = output.entities['preface:preface'] ? output.entities['preface:preface'][0].value : null;
+                    let command = output.entities['command:command'] ? output.entities['command:command'][0].value : null;
+
+                    if (preface == null || command == null) {
+                        reject('Couldn\'t find a preface or command');
+                    }
+
+                    let options = output.entities['options:options'] ? output.entities['options:options'][0].value : '';
+
+                    let str = `${preface} ${command} ${options}`;
+                    for (let ent in output.entities) {
+                        if (ent == 'preface:preface' || ent == 'command:command' || ent == 'options:options') {
+                            continue;
+                        }
+
+                        str += ' ' + output.entities[ent][0].value;
+                    }
+                    
+
+                    return resolve(str);
+                }
 
                 if (output && '_text' in output && output._text.length)
                     return resolve(output._text);
