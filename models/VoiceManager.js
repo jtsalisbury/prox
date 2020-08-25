@@ -38,7 +38,7 @@ class VoiceManager {
             if (!guild.allowSpeechRecognition.includes(user.id)) {
                 return;
             }
-
+ 
             console.log('listening to ' + user.username);
 
             // Get an audio stream
