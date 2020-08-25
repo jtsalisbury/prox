@@ -10,8 +10,7 @@ const _utils = require('@services/utils'); // i chose a great name didn't i
 
 const ytsearchProm = utils.promisify(ytsearch);
 
-// Master storage for all queues across servers
-let serverQueues = new Map();
+const MUSIC_CTX_ID = "MUSIC_QUEUE";
 
 let verifyChannelPerms = function(message) {
     if (!message.member) {
@@ -28,19 +27,27 @@ let verifyChannelPerms = function(message) {
     return true;
 }
 
+let getVoiceManager = function(guildId) {
+    return GuildManager.getVoiceManager(guildId);
+}
+
 let getServerQueue = function(guildId) {
-    return serverQueues.get(guildId);
+    return getVoiceManager(guildId).get(MUSIC_CTX_ID);
 }
 
 let playNextSong = async function(guildId, channel) {
-    let queue = serverQueues.get(guildId);
+    let voiceMgr = getVoiceManager(guildId);
+    let queue = getServerQueue(guildId);
+
+    if (!queue || !voiceMgr.getConnection()) {
+        return;
+    }
 
     // If there's no more songs go ahead and leave
     if (queue.songs.length === 0) {
-        queue.connection.channel.leave();
-        serverQueues.delete(guildId);
+        voiceMgr.delete(MUSIC_CTX_ID);
 
-        MessageService.sendMessage('No songs left in the queue, leaving', channel);
+        MessageService.sendMessage('No songs left in the queue', channel);
         return;
     }
 
@@ -78,7 +85,7 @@ let playNextSong = async function(guildId, channel) {
         }
     });
 
-    let dispatcher = queue.connection.play(stream, { type: 'opus' });
+    let dispatcher = voiceMgr.getConnection().play(stream, { type: 'opus' });
     dispatcher.on('finish', (reason) => {
         queue.songs.shift();
 
@@ -107,63 +114,25 @@ let playNextSong = async function(guildId, channel) {
 }
 
 let createNewQueue = async function(message, songs) {
+    let voiceMgr = getVoiceManager(message.guild.id);
+
     // Create a new queue object and add the song
     let queue = {
         textChannel: message.channel,
         voiceChannel: message.member.voice.channel,
-        connection: null,
         dispatcher: null,
         songs: songs,
         volume: 15,
         playing: true
     };
 
-
-    console.log(message);
-
-
-    if (message.guild.voice && message.guild.voice.connection) {
-        queue.connection = message.guild.voice.connection;
-    } else {
-        // Try to join the voice channel
-        let conn = await message.member.voice.channel.join();
-        queue.connection = conn;
+    if (!voiceMgr.getConnection()) {
+        await voiceMgr.joinChannel(message.member.voice.channel);
     }
 
-    // Add the guild queue to the map
-    serverQueues.set(message.guild.id, queue);
+    voiceMgr.set(MUSIC_CTX_ID, queue);
 
     return queue;
-}
-
-let volume = {};
-volume.aliases = ['volume'];
-volume.prettyName = 'Set Volume';
-volume.help = 'Sets the music volume to a number between 0 and 100';
-volume.params = [
-    {
-        name: 'volume',
-        type: 'number'
-    }
-];
-volume.executeViaIntegration = true;
-volume.callback = function(message, volume) {
-    if (volume < 0 || volume > 100) {
-        return 'Invalid number. Volume should be between 0 and 100';
-    }
-
-    volume = Math.floor(volume);
-
-    let guildId = message.guild.id;
-    let queue = getServerQueue(guildId);
-    if (!queue) {
-        return 'No active queue';
-    }
-
-    queue.volume = volume;
-    queue.dispatcher.setVolumeLogarithmic(volume / 100);
-
-    return `The volume has been set to **${volume}**`
 }
 
 // Note: artists, songs can only be tracked if the info is on youtube
@@ -255,6 +224,38 @@ async function getSongs(descriptor, guildId) {
     return songs;
 }
 
+
+let volume = {};
+volume.aliases = ['volume'];
+volume.prettyName = 'Set Volume';
+volume.help = 'Sets the music volume to a number between 0 and 100';
+volume.params = [
+    {
+        name: 'volume',
+        type: 'number'
+    }
+];
+volume.executeViaIntegration = true;
+volume.callback = function(message, volume) {
+    if (volume < 0 || volume > 100) {
+        return 'Invalid number. Volume should be between 0 and 100';
+    }
+
+    volume = Math.floor(volume);
+
+    let guildId = message.guild.id;
+    let queue = getServerQueue(guildId);
+    if (!queue) {
+        return 'No active queue';
+    }
+
+    queue.volume = volume;
+    queue.dispatcher.setVolumeLogarithmic(volume / 100);
+
+    return `The volume has been set to **${volume}**`
+}
+
+
 let play = {};
 play.aliases = ['play'];
 play.prettyName = 'Play Song';
@@ -269,15 +270,15 @@ play.executeViaIntegration = true;
 play.executePermissions = ['SPEAK', 'CONNECT'];
 play.callback = async function(message, descriptor) {
     // If there's a server queue add the song
-    let queue = serverQueues.get(message.guild.id);
+    let queue = getServerQueue(message.guild.id);
     if (queue) {
         let songs = await getSongs(descriptor, message.guild.id);    
 
         // Update the queue to have the playing song at the beginning, the playlist of new songs, followed by the old queue
         queue.songs = [queue.songs[0]].concat(songs, queue.songs.slice(1));
 
-        if (queue.connection && queue.connection.dispatcher) {
-            queue.connection.dispatcher.end();
+        if (queue && queue.dispatcher) {
+            queue.dispatcher.end();
         }
 
         return `Added ${songs.length} songs to the queue`;
@@ -312,7 +313,7 @@ enqueue.executeViaIntegration = true;
 enqueue.executePermissions = ['SPEAK', 'CONNECT'];
 enqueue.callback = async function(message, descriptor) {
     // If there's a server queue add the song
-    let queue = serverQueues.get(message.guild.id);
+    let queue = getServerQueue(message.guild.id);
     if (queue) {
         let songs = await getSongs(descriptor, message.guild.id);    
 
@@ -383,7 +384,7 @@ skip.callback = function(message) {
         return 'No active queue';
     }
 
-    queue.connection.dispatcher.end();
+    queue.dispatcher.end();
 }
 
 let stop = {};
@@ -401,7 +402,7 @@ stop.callback = function(message) {
     }
 
     queue.songs = [];
-    queue.connection.dispatcher.end();
+    queue.dispatcher.end();
 
     return 'Cleared the active queue and stopped playing all songs';
 }
@@ -439,7 +440,7 @@ pause.callback = function(message) {
         return 'No active queue';
     }
 
-    queue.connection.dispatcher.pause();
+    queue.dispatcher.pause();
 
     return 'The stream has been paused';
 }
@@ -458,8 +459,8 @@ resume.callback = function(message) {
         return 'No active queue';
     }
 
-    if (queue.connection.dispatcher.paused) {
-        queue.connection.dispatcher.resume();
+    if (queue.dispatcher.paused) {
+        queue.dispatcher.resume();
     } else {
         return 'The stream isn\'t paused';
     }
@@ -511,13 +512,13 @@ module.exports.addHooks = function(client) {
             }
 
             // Our bot left!
-            if (oldState.member.displayName == "cbot" && newState.connection == null) {
+            /*if (oldState.member.displayName == "cbot" && newState.connection == null) {
                 queue.songs = [];
                 
                 MessageService.sendMessage('We left the channel from another context, ending the queue', queue.textChannel);
                 
                 queue.connection.dispatcher.end();
-            }
+            }*/
             
         } catch(e) {}    
     });

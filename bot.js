@@ -170,10 +170,6 @@ let processMessage = async function(message, external = false) {
         });
     }
 
-    if (message.author && message.author.bot) {
-        return;
-    }
-
     if (!message.channel.permissionsFor(message.guild.me).has('SEND_MESSAGES', false)) {
         return;
     }

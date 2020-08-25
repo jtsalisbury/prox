@@ -1,51 +1,15 @@
-/*let EventEmitter = require('@services/events');
-let _utils = require('@services/utils');
-let fs = require('fs');
 let GuildManager = require('@models/GuildManager');
-let { Transform } = require('stream');
-
-let speechCache = new Map();
-
-function buffToChan(buff) {
-    let convBuff = Buffer.alloc(buff.length / 2);
-
-    for (i = 0; i < convBuff.length / 2; i++) {
-        let toInt16 = buff.readUInt16LE(i * 4);
-        convBuff.writeUInt16LE(toInt16, i * 2);
-    }
-
-    return convBuff;
-}
-
-async function createSpeechInstance(guildId, channel, connection) {
-    let data = {
-        channel: channel,
-        connection: connection
-    }
-    
-    if (!connection) {
-        data.connection = await channel.join();
-    }
-
-    speechCache.set(guildId, data);
-}
 
 let join = {};
 join.aliases = ['join'];
 join.prettyName = 'Join Voice Channel';
 join.help = 'Joins a voice channel and prepares cbot to listen for voice input';
 join.callback = async function (message) {
-    if (speechCache.get(message.guild.id)) {
-        return 'Already actively listening for speech input';
+    let voiceMgr = GuildManager.getVoiceManager(message.guild.id);
+
+    if (!voiceMgr.inChannel()) {
+        voiceMgr.joinChannel(message.member.voice.channel);
     }
-
-    if (message.member.voice.channel) {
-        createSpeechInstance(message.guild.id, message.member.voice.channel, null);
-
-        return 'Listening for voice input';
-    }
-
-    return 'You need to be in a voice channel to use this!';
 }
 
 let leave = {};
@@ -53,65 +17,44 @@ leave.aliases = ['leave'];
 leave.prettyName = 'Leave Voice Channel';
 leave.help = 'Leaves a voice channel';
 leave.callback = function (message) {
-    let data = speechCache.get(message.guild.id);
-    if (data) {
-        console.log(data);
-        data.channel.leave();
-        return 'No longer listening for voice input';
+    let voiceMgr = GuildManager.getVoiceManager(message.guild.id);
+
+    if (voiceMgr.inChannel()) {
+        voiceMgr.leaveChannel();
+    }
+}
+
+let speech = {};
+speech.aliases = ['speech'];
+speech.prettyName = 'Enable or disable speech';
+speech.help = 'Allows or revokes cbot\'s ability to recognize your voice';
+speech.params = [{
+    name: 'state (enable, disable)',
+    type: 'string'
+}];
+speech.callback = function(message, state) {
+    if (state != 'enable' && state != 'disable') {
+        return 'Invalid state. Please select enable or disable';
     }
 
-    return 'Not actively listening!';
-}
-
-let speechClient;
-module.exports.addHooks = function(client) {
-    /*client.on('ready', () => {
-        // Generate new google application credentials
-        let content = new Buffer(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64');
-        content = content.toString('ascii');
-
-        fs.writeFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, content, function(err) {
-            if (err) {
-                console.log(err);
-            }
-        });
-
-        speechClient = new GoogleSpeech.SpeechClient();
-    });
-
-    client.on('speaking', (user, speaking) => {
-        if (!speaking) {
-            return;
+    let guild = GuildManager.getGuild(message.guild.id);
+    if (state == 'enable') {
+        if (guild.allowSpeechRecognition.includes(message.member.id)) {
+            return 'You\'re already set to allow speech recognition';
         }
 
-        let guild = GuildManager.
-    })
+        guild.allowSpeechRecognition.push(message.member.id);
+        return 'You have enabled speech recognition';
+
+    } else {
+        let index = guild.allowSpeechRecognition.indexOf(message.member.id);
+        if (index != -1) {
+            guild.allowSpeechRecognition.splice(index);
+            return 'You have disabled speech recognition';
+        }
+
+        return 'You\'re already set to not allow speech recognition';
+    }
 }
 
-module.exports.addHooks = function(client) {
-    // Hook to see if we should stop playing music when everyone leaves the channel
-    client.on("voiceStateUpdate", function(oldState, newState){
-        try {
-            let cache = speechCache.get(oldState.guild.id);
-            if (!cache) {
-                if (oldState.member.displayName == "cbot" && newState.channel) {
-                    createSpeechInstance(newState.guild.id, newState.channel, newState.connection);
-                }
-
-                return;
-            }
-
-            // Our bot left!
-            if (oldState.member.displayName == "cbot" && newState.connection == null) {
-                cache.songs = [];
-                
-                MessageService.sendMessage('We left the channel from another context, no longer listening for voice input', queue.textChannel);
-                
-                queue.connection.dispatcher.end();
-            }
-            
-        } catch(e) {}    
-    });
-}
-
-module.exports.commands = [join, leave];*/
+module.exports.commands = [join, leave, speech];

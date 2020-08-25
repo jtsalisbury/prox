@@ -1,8 +1,10 @@
 let mongoose = require('mongoose');
+let VoiceManager = require('@models/VoiceManager');
 
 class GuildManager {
     constructor() {
         this.guildCache = new Map();
+        this.voiceCache = new Map();
     }
 
     async connect() {
@@ -32,10 +34,6 @@ class GuildManager {
                     userAction: mongoose.Schema.Types.String,
                     performAction: mongoose.Schema.Types.String
                 }],
-                speech: [{
-                    whitelistedUsers: [],
-                    replyChannelId: mongoose.Schema.Types.String
-                }],
                 events: [{
                     title: mongoose.Schema.Types.String,
                     description: mongoose.Schema.Types.String,
@@ -54,7 +52,8 @@ class GuildManager {
                     integrationName: mongoose.Schema.Types.String,
                     syncMessages: mongoose.Schema.Types.Boolean,
                     integrationId: mongoose.Schema.Types.Number
-                }]
+                }],
+                allowSpeechRecognition: []
             });
 
             this.Guild = mongoose.model('Guild', this.guildSchema);
@@ -71,8 +70,12 @@ class GuildManager {
                     restrictions: [],
                     reactions: [],
                     autoActions: [],
-                    statistics: {}
+                    statistics: {},
+                    events: [],
+                    integrations: []
                 });
+
+                this.voiceCache.set(guildId, new VoiceManager());
 
                 newGuild.save();
                 resolve(newGuild);
@@ -83,6 +86,8 @@ class GuildManager {
                         console.log(err);
                         return;
                     }
+
+                    this.voiceCache.set(guildId, new VoiceManager());
 
                     this.guildCache.set(guildId, res);
                     resolve(res);
@@ -102,6 +107,10 @@ class GuildManager {
 
     getGuild(guildId) {
         return this.guildCache.get(guildId);
+    }
+
+    getVoiceManager(guildId) {
+        return this.voiceCache.get(guildId);
     }
 }
 
