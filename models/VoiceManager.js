@@ -31,7 +31,7 @@ class VoiceManager {
             console.log('speaking update for ' + user.username);
             if (!speaking) {
                 return;
-            }
+            } 
 
             let GuildManager = require('@models/GuildManager');
             let guild = GuildManager.getGuild(channel.guild.id);
