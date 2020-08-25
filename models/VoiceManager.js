@@ -23,9 +23,12 @@ class VoiceManager {
             this.leaveChannel();
         }
 
+        console.log('joining channel...');
+
         this.connection = await channel.join();
 
         this.connection.on('speaking', (user, speaking) => {
+            console.log('speaking update for ' + user.username);
             if (!speaking) {
                 return;
             }
