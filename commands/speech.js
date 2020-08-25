@@ -8,8 +8,12 @@ join.callback = async function (message) {
     let voiceMgr = GuildManager.getVoiceManager(message.guild.id);
 
     if (!voiceMgr.inChannel()) {
-        voiceMgr.joinChannel(message.member.voice.channel);
+        await voiceMgr.joinChannel(message.member.voice.channel);
     }
+
+    // For some reason on initial join, the bot doesn't pick up any audio without first playing something? Strange!
+    let conn = voiceMgr.getConnection();
+    let disp = conn.play(require("path").join(__dirname, '../assets/silence.mp3'));
 }
 
 let leave = {};
