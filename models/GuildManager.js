@@ -53,7 +53,8 @@ class GuildManager {
                     syncMessages: mongoose.Schema.Types.Boolean,
                     integrationId: mongoose.Schema.Types.Number
                 }],
-                allowSpeechRecognition: []
+                allowSpeechRecognition: [],
+                autoplayEnabled: mongoose.Schema.Types.Mixed
             });
 
             this.Guild = mongoose.model('Guild', this.guildSchema);

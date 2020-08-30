@@ -60,30 +60,28 @@ let playNextSong = async function(guildId, channel) {
     });
 
     // I hate this. Supposedly, above fires an info event. I can't seem to grab it, though.
-    let infoProm = ytdl.getInfo(curSong.url);
-    infoProm.then(songInfo => {
-        if (songInfo.media.category == 'Music') {
-            let artists = [];
-            let titles = [];
+    let songInfo = await ytdl.getInfo(curSong.url);
+    if (songInfo.media.category == 'Music') {
+        let artists = [];
+        let titles = [];
 
-            // Track artists
-            if (songInfo.media.artist) {
-                let newArtists = songInfo.media.artist.split(',');
-                newArtists.forEach(artist => {
-                    artist = artist.trim();
+        // Track artists
+        if (songInfo.media.artist) {
+            let newArtists = songInfo.media.artist.split(',');
+            newArtists.forEach(artist => {
+                artist = artist.trim();
 
-                    artists[artist] = artists[artist] ? artists[artist] + 1 : 1;
-                })
-            }
-            
-            // Track song titles
-            if (songInfo.media.song) {
-                titles[songInfo.media.song] =  1;
-            }
-
-            updateMusicStats(artists, titles, guildId);
+                artists[artist] = artists[artist] ? artists[artist] + 1 : 1;
+            })
         }
-    });
+        
+        // Track song titles
+        if (songInfo.media.song) {
+            titles[songInfo.media.song] =  1;
+        }
+
+        updateMusicStats(artists, titles, guildId);
+    }
 
     let dispatcher = voiceMgr.getConnection().play(stream, { type: 'opus' });
     dispatcher.on('finish', (reason) => {
@@ -104,7 +102,18 @@ let playNextSong = async function(guildId, channel) {
     if (queue.songs.length > 1) {
         nextSong = `The next song is **${queue.songs[1].title}**`;
     } else {
-        nextSong = 'There is no song up next';
+        if (queue.autoplay && songInfo.related_videos.length > 0) {
+            let related = songInfo.related_videos[0];
+
+            queue.songs.push({
+                title: related.title + ' by ' + related.author,
+                url: `https://www.youtube.com/watch?v=${related.id}`
+            });
+
+            nextSong = `Autoplay is enabled. The next song is **${related.title} by ${related.author}**`;
+        } else {
+            nextSong = 'There is no song up next';
+        }
     }
 
     // Set the volume logarithmically
@@ -123,7 +132,8 @@ let createNewQueue = async function(message, songs) {
         dispatcher: null,
         songs: songs,
         volume: 15,
-        playing: true
+        playing: true,
+        autoplay: GuildManager.getGuild(message.guild.id).autoplayEnabled
     };
 
     if (!voiceMgr.getConnection()) {
@@ -257,6 +267,65 @@ volume.callback = function(message, volume) {
     queue.dispatcher.setVolumeLogarithmic(volume / 100);
 
     return `The volume has been set to **${volume}**`
+}
+
+let autoplay = {}
+autoplay.aliases = ['autoplay'];
+autoplay.prettyName = 'Autoplay';
+autoplay.help = 'Enable or disable autoplaying of related videos from YouTube';
+autoplay.params = [
+    {
+        name: 'state (enable, disable)',
+        type: 'string'
+    }
+]
+autoplay.executeViaIntegration = true;
+autoplay.callback = async function(message, state) {
+    let guild = GuildManager.getGuild(message.guild.id);
+    
+    if (guild.autoplayEnabled) {
+        if (state == 'enable') {
+            return 'Autoplay is already enabled';
+        }
+
+        guild.autoplayEnabled = false;
+
+        let queue = getServerQueue(message.guild.id);
+        if (queue) {
+            queue.autoplay = false;
+        }
+
+        return 'Autoplay is now disabled';
+    } else {
+        if (state == 'disable') {
+            return 'Autoplay is already disabled';
+        }
+
+        guild.autoplayEnabled = true;
+
+        let queue = getServerQueue(message.guild.id);
+
+        if (queue) {
+            queue.autoplay = true;
+        }
+
+        if (queue && queue.songs.length == 1) {
+            let songInfo = await ytdl.getInfo(queue.songs[0].url);
+            
+            if (songInfo.related_videos.length > 0) {
+                let related = songInfo.related_videos[0];
+
+                queue.songs.push({
+                    title: related.title + ' by ' + related.author,
+                    url: `https://www.youtube.com/watch?v=${related.id}`
+                });
+
+                return `Autoplay is now enabled. The next song is **${related.title} by ${related.author}**`;
+            }
+        }
+
+        return 'Autoplay is now enabled';
+    }
 }
 
 
@@ -497,7 +566,7 @@ getQueue.callback = function(message) {
         }
 
         // Construct the string
-        queueStr = `There are ${queue.songs.length} songs in the queue. The first ${i} are ` + queueStr.substr(0, queueStr.length - 2); 
+        queueStr = `There are ${queue.songs.length-1} songs in the queue. The first ${i-1} are ` + queueStr.substr(0, queueStr.length - 2); 
     } else {
         queueStr = 'There are no songs in the queue';
     }
@@ -528,4 +597,4 @@ module.exports.addHooks = function(client) {
     });
 }
 
-module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume];
+module.exports.commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume, autoplay];
