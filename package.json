@@ -42,7 +42,7 @@
         "start": "node bot.js"
     },
     "devDependencies": {
-        "prettier": "^1.19.1"
+        "prettier": "1.19.1"
     },
     "_moduleAliases": {
         "@models": "./models",
