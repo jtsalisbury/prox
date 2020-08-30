@@ -194,6 +194,10 @@ async function getSongs(descriptor, guildId) {
     
     let songs = [];
 
+    if (link.indexOf('channel') !== -1) {
+        return [];
+    }
+
     // YouTube link
     if (link.indexOf('youtube') !== -1) {
         // Determine whether we are dealing with a playlist or not
