@@ -107,10 +107,11 @@ let playNextSong = async function(guildId, channel) {
 
             queue.songs.push({
                 title: related.title + ' by ' + related.author,
-                url: `https://www.youtube.com/watch?v=${related.id}`
+                url: `https://www.youtube.com/watch?v=${related.id}`,
+                autoplay: true
             });
 
-            nextSong = `Autoplay is enabled. The next song is **${related.title} by ${related.author}**`;
+            nextSong = `Autoplay is enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
         } else {
             nextSong = 'There is no song up next';
         }
@@ -317,10 +318,11 @@ autoplay.callback = async function(message, state) {
 
                 queue.songs.push({
                     title: related.title + ' by ' + related.author,
-                    url: `https://www.youtube.com/watch?v=${related.id}`
+                    url: `https://www.youtube.com/watch?v=${related.id}`,
+                    autoplay: true
                 });
 
-                return `Autoplay is now enabled. The next song is **${related.title} by ${related.author}**`;
+                return `Autoplay is now enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
             }
         }
 
@@ -345,7 +347,11 @@ play.callback = async function(message, descriptor) {
     // If there's a server queue add the song
     let queue = getServerQueue(message.guild.id);
     if (queue) {
-        let songs = await getSongs(descriptor, message.guild.id);    
+        let songs = await getSongs(descriptor, message.guild.id);
+
+        if (queue.songs.length > 1 && queue.songs[1].autoplay) {
+            queue.songs.splice(1, 1);
+        }
 
         // Update the queue to have the playing song at the beginning, the playlist of new songs, followed by the old queue
         queue.songs = [queue.songs[0]].concat(songs, queue.songs.slice(1));
@@ -389,6 +395,10 @@ enqueue.callback = async function(message, descriptor) {
     let queue = getServerQueue(message.guild.id);
     if (queue) {
         let songs = await getSongs(descriptor, message.guild.id);    
+
+        if (queue.songs.length > 1 && queue.songs[1].autoplay) {
+            queue.songs.splice(1, 1);
+        }
 
         queue.songs = queue.songs.concat(songs);
 
