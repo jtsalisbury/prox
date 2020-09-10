@@ -161,6 +161,7 @@ let processMessage = async function(message, external = false) {
             // For this channel, if the integration matches, go ahead and send it!
             if (message.channel.id == integration.channelId) {
                 for (let socketId in integration.connections) {
+                    console.log('Sending integration message to ' + integration.name + ' with message ' + message.content);
                     integration.connections[socketId].emit('message', {
                         sender: message.author.username, 
                         content: message.content 
