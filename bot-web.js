@@ -8,6 +8,8 @@ let GuildManager = require('@models/GuildManager');
 let IntegrationManager = require('@models/IntegrationManager');
 let MessageService = require('@services/message');
 
+let logger = require('winston');
+
 // Process messages TO our bot via HTTP
 app.post('/message', async (req, res) => {
     let token = req.header('X-CBOT-Signature');
