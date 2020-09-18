@@ -1,10 +1,12 @@
 let mongoose = require('mongoose');
 let VoiceManager = require('@models/VoiceManager');
+let IntegrationManager = require('@models/IntegrationManager');
 
 class GuildManager {
     constructor() {
         this.guildCache = new Map();
         this.voiceCache = new Map();
+        this.integrationCache = new Map();
     }
 
     async connect() {
@@ -80,6 +82,7 @@ class GuildManager {
 
                 newGuild.save();
                 resolve(newGuild);
+                
                 this.guildCache.set(guildId, newGuild);
             } else {
                 this.Guild.findOne({ guildId: guildId }, (err, res) => {
@@ -89,6 +92,10 @@ class GuildManager {
                     }
 
                     this.voiceCache.set(guildId, new VoiceManager());
+
+                    res.integrations.forEach(int => {
+                        IntegrationManager.addIntegration(guildId, int);
+                    });
 
                     this.guildCache.set(guildId, res);
                     resolve(res);
@@ -112,6 +119,10 @@ class GuildManager {
 
     getVoiceManager(guildId) {
         return this.voiceCache.get(guildId);
+    }
+
+    getIntegrationManager(guildId) {
+        return this.integrationCache.get(guildId);
     }
 }
 
