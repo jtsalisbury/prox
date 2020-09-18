@@ -20,7 +20,7 @@
         "ffmpeg-static": "^3.0.0",
         "fluent-ffmpeg": "^2.1.2",
         "libsodium-wrappers": "^0.7.8",
-        "mathjs": "^6.6.5",
+        "mathjs": "^7.0.0",
         "minecraft-server-util": "^3.0.0",
         "module-alias": "^2.2.2",
         "mongoose": "^5.10.0",
@@ -43,7 +43,7 @@
         "start": "node bot.js"
     },
     "devDependencies": {
-        "prettier": "1.19.1"
+        "prettier": "2.1.2"
     },
     "_moduleAliases": {
         "@models": "./models",
