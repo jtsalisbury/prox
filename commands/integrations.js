@@ -19,7 +19,7 @@ add.params = [
     },
     {
         name: 'sync messages',
-        type: 'boolean',
+        type: 'bool',
         optional: true,
         default: false
     },

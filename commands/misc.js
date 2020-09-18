@@ -110,12 +110,10 @@ summit.help = 'Ping summit.nhacks.dev';
 summit.executeViaIntegration = false;;
 summit.callback = async function(message) {
     try {
-        let result = await minecraft.pingFE01('summit.nhacks.dev', { port: 25585 });
+        let result = await minecraft.status('summit.nhacks.dev', { port: 25585 });
 
         if (result && result.onlinePlayers != null) {
-            let online = result.onlinePlayers;
-
-            return 'Summit is up! There are ' + online + ' players';
+            return 'Summit is up!';
         }
     } catch (e) {
         console.log(e);

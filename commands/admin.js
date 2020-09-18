@@ -72,7 +72,7 @@ purge.callback = async function(message, count) {
         return 'Please provide a number between 2 and 100';
     }
 
-    let messages = await message.channel.fetchMessages({limit: count});
+    let messages = await message.channel.messages.fetch({limit: count});
     message.channel.bulkDelete(messages);
 }
 
