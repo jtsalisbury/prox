@@ -1,6 +1,5 @@
 require('dotenv').config();
 require('module-alias/register');
-require('./bot-web.js');
 
 let Discord = require('discord.js');
 let client = new Discord.Client();
@@ -107,7 +106,11 @@ EventService.on('cbot.guildsLoaded', function (loaded) {
     }
     saveGuilds();
 
+    // Initialize message service
     MessageService.initialize();
+
+    // Initialize web handler
+    require('./bot-web.js')(client);
 })
 
 // We joined a guild
