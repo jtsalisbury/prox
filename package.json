@@ -21,7 +21,7 @@
         "fluent-ffmpeg": "^2.1.2",
         "libsodium-wrappers": "^0.7.8",
         "mathjs": "^7.0.0",
-        "minecraft-server-util": "^2.2.0",
+        "minecraft-server-util": "^3.0.0",
         "module-alias": "^2.2.2",
         "mongoose": "^5.10.0",
         "node-opus": "^0.3.3",
