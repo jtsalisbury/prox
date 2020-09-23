@@ -8,6 +8,7 @@ module.exports = function(client) {
     let GuildManager = require('@models/GuildManager');
     let IntegrationManager = require('@models/IntegrationManager');
     let MessageService = require('@services/message');
+    let CommandHandler = require('@models/CommandHandler');
 
     let logger = require('winston');
 
@@ -28,6 +29,25 @@ module.exports = function(client) {
         res.status(200).send(JSON.stringify({
             response: result
         }));
+    });
+
+    app.get('/help', async (req, res) => {
+        let commands = CommandHandler.getCommands();
+
+        let results = [];
+        commands.forEach((cmdObj) => {
+            results.push({
+                prettyName: cmdObj.getName(),
+                help: cmdObj.getHelp(),
+                aliases: cmdObj.getAliases(),
+                params: cmdObj.getParams(),
+                userPermissions: cmdObj.getUserPermissions(),
+                botPermissions: cmdObj.getExecPermissions(),
+                canExecuteExternally: cmdObj.getExternal()
+            });
+        });
+
+        res.status(200).send(JSON.stringify(results));
     });
 
     // For use with validation integrations via HTTP
