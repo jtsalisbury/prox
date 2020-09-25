@@ -51,7 +51,7 @@ future.convert = function(value) {
         return;
     }
 
-    let str = `${day} ${month} ${year} ${hour}:${minute}:00 ${timeZone}`;
+    let str = `${month} ${day} ${year} ${hour}:${minute}:00 ${timeZone}`;
 
     // Note, returns dates in UTC
     let dt = new Date(Date.parse(str));
