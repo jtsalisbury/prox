@@ -223,7 +223,7 @@ async function watchMessage(event, guild) {
 
 module.exports.addHooks = function(client) {
     // This is disgusting, I'll get it fixed eventually 
-    EventService.on('cbot.guildsLoaded', async () => {
+    EventService.on('prox.guildsLoaded', async () => {
         client.guilds.cache.forEach(discordGuild => {
             let guild = GuildManager.getGuild(discordGuild.id);
 

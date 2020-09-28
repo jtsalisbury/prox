@@ -14,7 +14,7 @@ module.exports = function(client) {
 
     // Process messages TO our bot via HTTP
     app.post('/message', async (req, res) => {
-        let token = req.header('X-CBOT-Signature');
+        let token = req.header('X-PROX-Signature');
 
         if (token) {
             token = token.toLowerCase();
@@ -55,7 +55,7 @@ module.exports = function(client) {
 
     // For use with validation integrations via HTTP
     app.get('/auth', async (req, res) => {
-        let token = req.header('X-CBOT-Signature');
+        let token = req.header('X-PROX-Signature');
         if (!token || !IntegrationManager.getIntegration(token.toLowerCase)) {
             res.status(500).send(JSON.stringify({
                 response: 'token not set'

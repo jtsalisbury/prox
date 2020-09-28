@@ -25,7 +25,7 @@ git.prettyName = 'GitHub';
 git.help = 'View this on GitHub';
 git.executeViaIntegration = true;
 git.callback = function() {
-    return 'https://github.com/jtsalisbury/discord-cbot';
+    return 'https://github.com/jtsalisbury/prox';
 };
 
 let gimme = {};

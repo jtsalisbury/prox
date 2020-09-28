@@ -3,7 +3,7 @@ let GuildManager = require('@models/GuildManager');
 let join = {};
 join.aliases = ['join'];
 join.prettyName = 'Join Voice Channel';
-join.help = 'Joins a voice channel and prepares cbot to listen for voice input';
+join.help = 'Joins a voice channel and prepares Prox to listen for voice input';
 join.callback = async function (message) {
     let voiceMgr = GuildManager.getVoiceManager(message.guild.id);
 
@@ -31,7 +31,7 @@ leave.callback = function (message) {
 let speech = {};
 speech.aliases = ['speech'];
 speech.prettyName = 'Enable or disable speech';
-speech.help = 'Allows or revokes cbot\'s ability to recognize your voice';
+speech.help = 'Allows or revokes Prox\'s ability to recognize your voice';
 speech.params = [{
     name: 'state (enable, disable)',
     type: 'string'

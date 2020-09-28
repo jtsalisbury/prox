@@ -83,14 +83,14 @@ client.on('ready', async () => {
 
     // Once we've got all the data, fire an event
     Promise.all(guildPromises).then((guilds) => {
-        EventService.emit('cbot.guildsLoaded', guilds);
+        EventService.emit('prox.guildsLoaded', guilds);
     })
 });
 
 // Save every five minutes
 let guilds = [];
 
-EventService.on('cbot.guildsLoaded', function (loaded) {
+EventService.on('prox.guildsLoaded', function (loaded) {
     guilds = loaded;
     function saveGuilds() {
         console.log('Saving guilds...');
@@ -122,7 +122,7 @@ client.on('guildCreate', async guild => {
     }
 
     let newGuild = await GuildManager.addGuild(guild.id, true);
-    EventService.emit('cbot.guildAdded', newGuild);
+    EventService.emit('prox.guildAdded', newGuild);
     guilds.push(newGuild);
 });
 
@@ -136,7 +136,7 @@ client.on('guildDelete', guild => {
 
     // Make sure we update any cache systems that may hold the doc
     GuildManager.removeGuild(guild.id)
-    EventService.emit('cbot.guildRemoved', guild.id);
+    EventService.emit('prox.guildRemoved', guild.id);
     guilds.forEach((guilds, index) => {
         if (guild.guildId == guild.id) {
             guilds.splice(index, 1);

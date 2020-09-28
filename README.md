@@ -1,4 +1,4 @@
-# discord-cbot
+# discord-prox
 
 Needed components: 
 * [Node.js](https://nodejs.org/en/download/)

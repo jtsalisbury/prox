@@ -595,7 +595,7 @@ module.exports.addHooks = function(client) {
             }
 
             // Our bot left!
-            /*if (oldState.member.displayName == "cbot" && newState.connection == null) {
+            /*if (oldState.member.displayName == "Prox" && newState.connection == null) {
                 queue.songs = [];
                 
                 MessageService.sendMessage('We left the channel from another context, ending the queue', queue.textChannel);

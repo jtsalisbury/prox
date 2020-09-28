@@ -43,7 +43,7 @@ add.callback = async function(message, name, sync) {
 
         guild.integrations.push(intData);
 
-        MessageService.sendMessage(`We've added your integration. Please use this secret (sha1 hash, hex digest) with these guidelines:\n> If you're using rest, set it as the X-CBOT-Signature.\n> If you're using socket.io, please send it in the authorization event as the signature.\nSecret: ${randomString}\n**Please delete this message once you have saved your secret.**`, message.author);
+        MessageService.sendMessage(`We've added your integration. Please use this secret (sha1 hash, hex digest) with these guidelines:\n> If you're using rest, set it as the X-PROX-Signature.\n> If you're using socket.io, please send it in the authorization event as the signature.\nSecret: ${randomString}\n**Please delete this message once you have saved your secret.**`, message.author);
 
         IntegrationManager.addIntegration(message.guild.id, intData)
 
