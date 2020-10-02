@@ -20,10 +20,10 @@
         "ffmpeg-static": "^3.0.0",
         "fluent-ffmpeg": "^2.1.2",
         "libsodium-wrappers": "^0.7.8",
-        "mathjs": "^7.0.0",
-        "minecraft-server-util": "^3.0.0",
+        "mathjs": "^7.3.0",
+        "minecraft-server-util": "^3.0.2",
         "module-alias": "^2.2.2",
-        "mongoose": "^5.10.0",
+        "mongoose": "^5.10.7",
         "node-opus": "^0.3.3",
         "node-witai-speech": "^1.0.2",
         "opusscript": "0.0.7",
@@ -31,13 +31,13 @@
         "socket.io": "^2.3.0",
         "socket.io-auth": "^1.0.0",
         "socketio-auth": "^0.1.1",
-        "underscore": "^1.10.2",
+        "underscore": "^1.11.0",
         "utf-8-validate": "^5.0.2",
         "winston": "^3.3.3",
         "youtube-playlist": "^1.0.4",
         "youtube-search": "^1.1.4",
         "ytdl-core": "^2.1.7",
-        "ytdl-core-discord": "^1.2.1"
+        "ytdl-core-discord": "^1.2.3"
     },
     "scripts": {
         "start": "node bot.js"
