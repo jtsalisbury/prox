@@ -67,6 +67,8 @@ client.on('ready', async () => {
     logger.info('Logged in as: ');
     logger.info(client.user.username + ' - (' + client.user.id + ')');
 
+    client.user.setActivity('!help for commands');
+
     await GuildManager.connect();
 
     // Make sure we get up to date documents on each guild
