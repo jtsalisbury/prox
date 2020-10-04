@@ -89,6 +89,15 @@ client.on('ready', async () => {
     })
 });
 
+client.on('voiceStateUpdate', (oldState, newState) => {
+    let guildId = newState.guild.id;
+    let voiceMgr = GuildManager.getVoiceManager(guildId);
+    
+    if (voiceMgr.inChannel() && voiceMgr.getChannel().members.size == 1) {
+        voiceMgr.leaveChannel();
+    }
+});
+
 // Save every five minutes
 let guilds = [];
 

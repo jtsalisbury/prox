@@ -5,6 +5,8 @@ let GuildManager = require('@models/GuildManager');
 const ytdl = require('ytdl-core-discord');
 const ytlist = require('youtube-playlist');
 const ytsearch = require('youtube-search');
+const scdl = require("soundcloud-downloader");
+
 const utils = require('util');
 const _utils = require('@services/utils'); // i chose a great name didn't i
 
@@ -35,6 +37,60 @@ let getServerQueue = function(guildId) {
     return getVoiceManager(guildId).get(MUSIC_CTX_ID);
 }
 
+let getStream = async function(url) {
+    if (url.indexOf('youtube.com') !== -1) {
+        let stream = await ytdl(url, {
+            highWaterMark: 2500000,
+            filter: 'audioandvideo' 
+        });
+
+        return { stream: stream, type: 'opus' };
+    }
+
+    if (url.indexOf('soundcloud.com') !== -1) {
+        let stream = await scdl.downloadFormat(url, scdl.FORMATS.OPUS, process.env.SOUNDCLOUD_API);
+
+        return { stream: stream, type: 'ogg/opus' };
+    }
+}
+
+let getRelatedVideo = async function(url) {
+    if (url.indexOf('youtube.com') !== -1) {
+        let songInfo = await ytdl.getInfo(url);
+            
+        if (songInfo.related_videos.length > 0) {
+            let related = songInfo.related_videos[0];
+
+            let moreInfo = await ytdl.getInfo(`https://www.youtube.com/watch?v=${related.id}`);
+            let artists = [];
+
+            // Get the artist
+            if (moreInfo.videoDetails.media.artist) {
+                let newArtists = moreInfo.videoDetails.media.artist.split(',');
+                newArtists.forEach(artist => {
+                    artist = artist.trim();
+
+                    artists[artist] = artists[artist] ? artists[artist] + 1 : 1;
+                })
+            }
+
+            return {
+                title: related.title,
+                url: `https://www.youtube.com/watch?v=${related.id}`,
+                author: related.author,
+                autoplay: true,
+                artists: artists
+            };
+        } else {
+            return 'No related videos available';
+        }
+    }
+
+    if (url.indexOf('soundcloud.com') !== -1) {
+        return 'Autoplay is enabled, but not supported with SoundCloud';
+    }
+}
+
 let playNextSong = async function(guildId, channel) {
     let voiceMgr = getVoiceManager(guildId);
     let queue = getServerQueue(guildId);
@@ -54,36 +110,14 @@ let playNextSong = async function(guildId, channel) {
     let curSong = queue.songs[0];
 
     // Create a new dispatcher to play our stream
-    let stream = await ytdl(curSong.url, {
-        highWaterMark: 2500000,
-        filter: 'audioandvideo' 
-    });
+    let streamData = await getStream(curSong.url);
 
-    // I hate this. Supposedly, above fires an info event. I can't seem to grab it, though.
-    let songInfo = await ytdl.getInfo(curSong.url);
-    if (songInfo.media.category == 'Music') {
-        let artists = [];
-        let titles = [];
-
-        // Track artists
-        if (songInfo.media.artist) {
-            let newArtists = songInfo.media.artist.split(',');
-            newArtists.forEach(artist => {
-                artist = artist.trim();
-
-                artists[artist] = artists[artist] ? artists[artist] + 1 : 1;
-            })
-        }
-        
-        // Track song titles
-        if (songInfo.media.song) {
-            titles[songInfo.media.song] =  1;
-        }
-
-        updateMusicStats(artists, titles, guildId);
+    // Update the current music stats
+    if (curSong.artists.length > 0) {
+        updateMusicStats(curSong.artists, [curSong.title], guildId);
     }
 
-    let dispatcher = voiceMgr.getConnection().play(stream, { type: 'opus' });
+    let dispatcher = voiceMgr.getConnection().play(streamData.stream, { type: streamData.type });
     dispatcher.on('finish', (reason) => {
         queue.songs.shift();
 
@@ -102,16 +136,17 @@ let playNextSong = async function(guildId, channel) {
     if (queue.songs.length > 1) {
         nextSong = `The next song is **${queue.songs[1].title}**`;
     } else {
-        if (queue.autoplay && songInfo.related_videos.length > 0) {
-            let related = songInfo.related_videos[0];
+        if (queue.autoplay) {
+            let related = await getRelatedVideo(curSong.url);
 
-            queue.songs.push({
-                title: related.title + ' by ' + related.author,
-                url: `https://www.youtube.com/watch?v=${related.id}`,
-                autoplay: true
-            });
+            if (typeof(related) == 'string') {
+                nextSong = related
+            } else {
 
-            nextSong = `Autoplay is enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
+                queue.songs.push(related); //title, url, autoplay, author
+
+                nextSong = `Autoplay is enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
+            }
         } else {
             nextSong = 'There is no song up next';
         }
@@ -121,29 +156,6 @@ let playNextSong = async function(guildId, channel) {
     dispatcher.setVolumeLogarithmic(queue.volume / 100);
 
     MessageService.sendMessage(`Now playing **${curSong.title}** at **${queue.volume}%**\n${nextSong}`, channel);
-}
-
-let createNewQueue = async function(message, songs) {
-    let voiceMgr = getVoiceManager(message.guild.id);
-
-    // Create a new queue object and add the song
-    let queue = {
-        textChannel: message.channel,
-        voiceChannel: message.member.voice.channel,
-        dispatcher: null,
-        songs: songs,
-        volume: 15,
-        playing: true,
-        autoplay: GuildManager.getGuild(message.guild.id).autoplayEnabled
-    };
-
-    if (!voiceMgr.getConnection()) {
-        await voiceMgr.joinChannel(message.member.voice.channel);
-    }
-
-    voiceMgr.set(MUSIC_CTX_ID, queue);
-
-    return queue;
 }
 
 // Note: artists, songs can only be tracked if the info is on youtube
@@ -186,9 +198,33 @@ function updateMusicStats(newArtistData, newSongData, guildId) {
     }
 }
 
+
+let createNewQueue = async function(message, songs) {
+    let voiceMgr = getVoiceManager(message.guild.id);
+
+    // Create a new queue object and add the song
+    let queue = {
+        textChannel: message.channel,
+        voiceChannel: message.member.voice.channel,
+        dispatcher: null,
+        songs: songs,
+        volume: 15,
+        playing: true,
+        autoplay: GuildManager.getGuild(message.guild.id).autoplayEnabled
+    };
+
+    if (!voiceMgr.getConnection()) {
+        await voiceMgr.joinChannel(message.member.voice.channel);
+    }
+
+    voiceMgr.set(MUSIC_CTX_ID, queue);
+
+    return queue;
+}
+
 async function getSongs(descriptor, guildId) {
     let link = descriptor;
-    if (descriptor.indexOf('youtube') === -1 && descriptor.indexOf('soundcloud') === -1) {
+    if (descriptor.indexOf('youtube.com') === -1 && descriptor.indexOf('soundcloud.com') === -1) {
         let opts = {
             maxResults: 1,
             key: process.env.YOUTUBE_API
@@ -210,29 +246,54 @@ async function getSongs(descriptor, guildId) {
     }
 
     // YouTube link
-    if (link.indexOf('youtube') !== -1) {
+    if (link.indexOf('youtube.com') !== -1) {
+        let links = [];
+        
         // Determine whether we are dealing with a playlist or not
         if (link.indexOf('&list=') !== -1 || link.indexOf('playlist') !== -1) {
             // Query YouTube to get all the songs in the playlist
             let result = await ytlist(link, ['name', 'url']);
             result.data.playlist.forEach(songInfo => {
-                songs.push({
-                    title: songInfo.name,
-                    url: songInfo.url
-                });
+                links.push(songInfo.url);
             });
         } else {
+            links.push(link);
+        }
+        
+        for (let i = 0; i < links.length; i++) {
+            let link = links[i];
+
             // Grab the info for our one song we want to add
             let songInfo = await ytdl.getInfo(link);
-            songs = [
-                {
-                    title: songInfo.title,
-                    url: songInfo.video_url
-                }
-            ];
-        }
+            let artists = [];
+
+            // Get the artist
+            if (songInfo.videoDetails.media.artist) {
+                let newArtists = songInfo.videoDetails.media.artist.split(',');
+                newArtists.forEach(artist => {
+                    artist = artist.trim();
+
+                    artists[artist] = artists[artist] ? artists[artist] + 1 : 1;
+                })
+            }
+
+            songs.push({
+                title: songInfo.videoDetails.title,
+                url: songInfo.videoDetails.video_url,
+                artists: artists
+            });
+        };
+        
+    } else if (link.indexOf('soundcloud.com') !== -1) {
+        let songInfo = await scdl.getInfo(link, process.env.SOUNDCLOUD_API);
+
+        songs.push({
+            title: songInfo.title,
+            url: link,
+            artists: [songInfo.user.full_name]
+        });
+
     } else {
-        // TODO: SoundCloud support
         return [];
     }
 
@@ -310,19 +371,16 @@ autoplay.callback = async function(message, state) {
             queue.autoplay = true;
         }
 
-        if (queue && queue.songs.length == 1) {
-            let songInfo = await ytdl.getInfo(queue.songs[0].url);
-            
-            if (songInfo.related_videos.length > 0) {
-                let related = songInfo.related_videos[0];
+        if (queue && queue.songs.length == 1) {           
+            let related = await getRelatedVideo(queue.songs[0].url);
 
-                queue.songs.push({
-                    title: related.title + ' by ' + related.author,
-                    url: `https://www.youtube.com/watch?v=${related.id}`,
-                    autoplay: true
-                });
+            if (typeof(related) == 'string') {
+                nextSong = related
+            } else {
 
-                return `Autoplay is now enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
+                queue.songs.push(related); //title, url, autoplay, author
+
+                nextSong = `Autoplay is now enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
             }
         }
 

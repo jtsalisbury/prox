@@ -92,6 +92,10 @@ class VoiceManager {
         this.data = new Map();
     }
 
+    getChannel() {
+        return this.channel;
+    }
+
     getSpeechContext() {
         return this.speechContext;
     }
