@@ -10,15 +10,6 @@ ping.callback = function() {
     return 'Pong!';
 };
 
-let kys = {};
-kys.aliases = ['kys'];
-kys.prettyName = 'Kill Yourself';
-kys.help = 'OOf';
-kys.executeViaIntegration = true;
-kys.callback = function() {
-    return ':cry: :gun:';
-};
-
 let git = {};
 git.aliases = ['git'];
 git.prettyName = 'GitHub';
@@ -122,4 +113,4 @@ summit.callback = async function(message) {
     return 'Summit is down!';
 }
 
-module.exports.commands = [ping, kys, git, gimme, say, insult, trump, summit];
+module.exports.commands = [ping, git, gimme, say, insult, trump, summit];

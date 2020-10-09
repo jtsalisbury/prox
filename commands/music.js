@@ -392,7 +392,7 @@ autoplay.callback = async function(message, state) {
 let play = {};
 play.aliases = ['play'];
 play.prettyName = 'Play Song';
-play.help = 'Stops the current song and plays a new one; maintains active queue. Can provide a YouTube/SoundCloud link, or search words for either platform';
+play.help = 'Stops the current song and plays a new one; maintains active queue. Can provide a YouTube/SoundCloud link, or search words for YouTube';
 play.params = [
     {
         name: 'link/search criteria',
