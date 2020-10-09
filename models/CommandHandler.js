@@ -121,6 +121,7 @@ class CommandHandler {
         });
 
         if (!validParams) {
+            MessageService.sendCommandError(activeCommand, alias, message.channel);
             return;
         }
 

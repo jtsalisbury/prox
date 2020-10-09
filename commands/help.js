@@ -8,7 +8,7 @@ help.executeViaIntegration = false;
 help.help = 'Takes you to the help page for Prox';
 
 help.callback = function() {
-    return 'Check out the help page https://discord-prox-web.herokuapp.com/help'
+    return 'Check out the help page at https://discord-prox-web.herokuapp.com/help'
 }
 
 module.exports.commands = [help];

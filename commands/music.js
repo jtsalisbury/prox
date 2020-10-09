@@ -610,7 +610,7 @@ resume.callback = function(message) {
 }
 
 let getQueue = {};
-getQueue.aliases = ['queue'];
+getQueue.aliases = ['queue', 'list'];
 getQueue.prettyName = 'Queue';
 getQueue.help = 'Prints the first five songs of the queue';
 getQueue.executeViaIntegration = true;

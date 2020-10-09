@@ -97,6 +97,12 @@ module.exports.sendMessage = function(string, target) {
     return target.send(string, { split: true });
 }
 
+module.exports.sendCommandError = function(command, alias, target) {
+    if (command) {
+        return target.send(`Usage: ${_utils.cmdHelp(command, alias)}`, { split: true });
+    }
+}
+
 module.exports.messageChannelById = function(string, guild, id) {
     let ch = guild.channels.cache.get(id);
 

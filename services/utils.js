@@ -148,4 +148,16 @@ utils.getRoles = function() {
     return ROLES;
 }
 
+utils.cmdHelp = function(command, alias) {
+    let paramHelp = "";
+    
+    command.getParams().forEach(param => {
+        let optText = param.optional ? 'optional, default: ' + (param.default == undefined ? 'nothing' : param.default) : 'required';
+
+        paramHelp += `<${param.name} (${param.type}, ${optText})> `;
+    });
+
+    return `\`!${alias} ${paramHelp}\n\``
+}
+
 module.exports = utils;
