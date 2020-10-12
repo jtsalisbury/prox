@@ -181,7 +181,7 @@ mfk.callback = function(message, marry, fuck, kill) {
     return handleMFK(message, marry, fuck, kill);
 }
 
-module.exports.addHooks = function(client) {
+module.exports.initialize = function(client) {
     client.on('ready', () => {
         let truthText = fs.readFileSync('assets/truths.txt').toString('utf-8');;
         truths = truthText.split('\n');

@@ -197,7 +197,7 @@ hangman.callback = function(message, action) {
     }
 }
 
-module.exports.addHooks = function(client) {
+module.exports.initialize = function(client) {
     client.on('message', message => {
         if (message.author.bot) {
             return;

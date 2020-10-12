@@ -221,7 +221,7 @@ async function watchMessage(event, guild) {
     }
 }
 
-module.exports.addHooks = function(client) {
+module.exports.initialize = function(client) {
     // This is disgusting, I'll get it fixed eventually 
     EventService.on('prox.guildsLoaded', async () => {
         client.guilds.cache.forEach(discordGuild => {

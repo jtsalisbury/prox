@@ -27,8 +27,8 @@ glob.sync('./commands/*.js').forEach(file => {
     } else {
         commands = required.commands;
     }
-    if (required.addHooks) {
-        required.addHooks(client);
+    if (required.initialize) {
+        required.initialize(client);
     }
 
     // Loop through the commands and register them!
