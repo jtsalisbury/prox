@@ -1,11 +1,11 @@
-import { IBaseParamHandler } from "../models/IBase";
+import { BaseParam } from "../models/BaseParam";
 
-let string: IBaseParamHandler = <IBaseParamHandler>{};
-string.name = 'string';
-string.convert = function(value) {
-    if (value) {
-        return value.replace(/[|`;$%@"(),]/g, "");
+export default class StringParam extends BaseParam {
+    paramType = 'string';
+
+    convert = function(value, _) {
+        if (value) {
+            return value.replace(/[|`;$%@"(),]/g, "");
+        }
     }
 }
-
-export let params = [string];

@@ -1,18 +1,19 @@
-import { IBaseParamHandler } from "../models/IBase";
+import { GuildMemberManager } from "discord.js";
+import { BaseParam } from "../models/BaseParam";
 
-let bool: IBaseParamHandler = <IBaseParamHandler>{};
-bool.name = 'bool';
-bool.convert = function(value) {
-    if (!value) {
-        return;
+export default class BooleanParam extends BaseParam {
+    paramType = 'bool';
+
+    convert = function(value, members: GuildMemberManager) {
+        if (!value) {
+            return;
+        }
+    
+        let lower = value.toLowerCase();
+        if (lower == 'y' || lower == 'true' || lower == 't' || lower == 'yes') {
+            return true;
+        }
+    
+        return false;
     }
-
-    let lower = value.toLowerCase();
-    if (lower == 'y' || lower == 'true' || lower == 't' || lower == 'yes') {
-        return true;
-    }
-
-    return false;
 }
-
-export let params = [bool];

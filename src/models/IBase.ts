@@ -1,8 +1,9 @@
 import { Message, TextChannel, VoiceChannel } from 'discord.js';
 
-export interface IBaseParam {
+export interface IBaseParamData {
     name: string;
     type: string;
+    allowedValues?: any[];
     optional?: boolean;
     default?: any;
     value?: any;
@@ -12,16 +13,11 @@ export interface IBaseCommand {
     aliases: string[];
     prettyName: string;
     help: string;
-    params: IBaseParam[];
+    params: IBaseParamData[];
     callback: (Message, ...any) => Promise<String> | Promise<void> | void;
     userPermissions?: string[];
     executePermissions?: string[];
     executeViaIntegration?: boolean;
-}
-
-export interface IBaseParamHandler {
-    name: string;
-    convert: (string, GuildMemberManager?) => any;
 }
 
 export interface IBaseMusicHandler {

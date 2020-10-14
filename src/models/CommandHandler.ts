@@ -3,40 +3,14 @@ import GuildManager from './GuildManager';
 import MessageService from '../services/message';
 import * as _utils from '../services/utils';
 
-import glob from 'glob';
-import path from 'path';
 import { Message, TextChannel } from 'discord.js';
-import { IBaseParam } from './IBase.js';
+import { BaseParam } from './BaseParam.js';
 
 class CommandHandler {
-    private commands: Map<string, Command>;
-    private aliasReference: Map<string, string>;
-    private paramTypes: object;
+    private commands: Map<string, Command> = new Map();
+    private aliasReference: Map<string, string> = new Map();
 
-    constructor() {
-        this.commands = new Map(); // reference to command objects
-        this.aliasReference = new Map(); // reference aliases to base
-
-        this.paramTypes = {};
-
-        glob.sync(__dirname + '/../param_types/*.js').forEach(async file => {
-            let required = await import(path.resolve(file));
-        
-            if (!required.params) {
-                return;
-            }
-
-            required.params.forEach(param => {
-                if (!param.name || !param.convert) {
-                    console.error('Improperly formatted param type');
-
-                    return;
-                }
-
-                this.paramTypes[param.name] = param.convert;
-            })
-        });
-    }
+    constructor() { }
 
     public registerCommand (aliases: string[], 
                     name: string, 
@@ -95,7 +69,6 @@ class CommandHandler {
         let activeCommand = this.getCommand(alias);
 
         if (!activeCommand) {
-            MessageService.sendMessage('No command found with that alias!', message.channel);
             return;
         }
 
@@ -106,7 +79,7 @@ class CommandHandler {
         }
 
         let parseIndex = 0;
-        let params: IBaseParam[] = activeCommand.getParams();
+        let params: BaseParam[] = activeCommand.getParams();
 
         // More arguments than there are params
         // Join the remaining arguments and mark it as the last param
@@ -119,16 +92,16 @@ class CommandHandler {
 
         // First, assign each parameter for the command to a value
         let validParams = true;
-        params.forEach(paramData => {
+        params.forEach(param => {
             let curVal = parsedLine[parseIndex];
 
-            let converted = this.convertToParamType(paramData.type, curVal, message.guild.members);
+            let converted = param.convert(curVal, message.guild.members);
 
-            if ((converted === undefined || converted == null) && !paramData.optional) {
-                MessageService.sendMessage('Invalid value for ' + paramData.name, message.channel);
+            if ((converted === undefined || converted == null) && !param.isOptional()) {
+                MessageService.sendMessage('Invalid value for ' + param.getName(), message.channel); // TODO: Put expected value
                 validParams = false;
-            } else if ((converted === undefined || converted == null) && paramData.optional) {
-                parsedLine[parseIndex] = paramData.default != undefined ? paramData.default : null;
+            } else if ((converted === undefined || converted == null) && param.isOptional()) {
+                parsedLine[parseIndex] = param.getDefault() != undefined ? param.getDefault() : null;
                 converted = parsedLine[parseIndex];
             }
             
@@ -163,22 +136,6 @@ class CommandHandler {
         }
 
         return res;
-    }
-
-    public convertToParamType (paramType: string, value: string, members): any {
-        let converter = this.paramTypes[paramType];
-
-        if (!converter) {
-            console.error('Attempt to find param type of ' + paramType + ' but was not registered');
-
-            return null;
-        }
-        
-        return converter(value, members);
-    }
-
-    public isValidCommand (alias: string): boolean {
-        return this.aliasReference.get(alias) !== undefined;
     }
 
     public getCommands(): Map<string, Command> {

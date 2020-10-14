@@ -1,11 +1,11 @@
-import { IBaseParam } from "./IBase";
+import { BaseParam } from "./BaseParam";
 
 export default class Command {
     private aliases: string[];
     private prettyName: string;
     private help: string;
     private callback: any;
-    private params: IBaseParam[];
+    private params: BaseParam[];
     private reqUserPerms: string[];
     private reqExecPerms: string[];
     private canBeUsedExternally: boolean;
@@ -28,26 +28,10 @@ export default class Command {
         this.canBeUsedExternally = external;
     }
 
-    public addParam(name: string, type: string, optional: boolean, def: any) {
-        this.params.push({
-            name: name,
-            type: type,
-            optional: optional,
-            default: def
-        });
+    public addParam(param: BaseParam) {
+        this.params.push(param);
 
         return this;
-    }
-
-    public setParamValue(name: string, newValue: any) {
-        // Assign the parameter a value. This is used for execution
-        for (let i in this.getParams()) {
-            let paramData = this.params[i];
-
-            if (paramData.name === name) {
-                this.params[i].value = newValue;
-            }
-        }
     }
 
     public getAliases(): string[] {
@@ -66,7 +50,7 @@ export default class Command {
         return this.help;
     }
 
-    public getParams(): IBaseParam[] {
+    public getParams(): BaseParam[] {
         return this.params;
     }
 

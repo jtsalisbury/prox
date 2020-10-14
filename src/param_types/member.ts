@@ -1,20 +1,20 @@
 import { GuildMemberManager } from "discord.js";
-import { IBaseParamHandler } from "../models/IBase";
+import { BaseParam } from "../models/BaseParam";
 
-let member: IBaseParamHandler = <IBaseParamHandler>{};
-member.name = 'member';
-member.convert = function(value: string, members: GuildMemberManager) {
-    if (!value) return;
+export default class MemberParam extends BaseParam {
+    paramType = 'member';
 
-    if (value.startsWith('<@') && value.endsWith('>')) {
-        value = value.slice(2, -1);
+    convert = function(value, members: GuildMemberManager) {
+        if (!value) return;
 
-        if (value.startsWith('!')) {
-            value = value.slice(1);
+        if (value.startsWith('<@') && value.endsWith('>')) {
+            value = value.slice(2, -1);
+
+            if (value.startsWith('!')) {
+                value = value.slice(1);
+            }
+
+            return members.cache.get(value);
         }
-
-        return members.cache.get(value);
     }
 }
-
-export let params = [member];

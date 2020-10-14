@@ -38,6 +38,9 @@ class MessageService {
         }
     
         if (message.guild && !message.channel.permissionsFor(message.guild.me).has('SEND_MESSAGES', false)) {
+            if (message.content.substring(0, 1) == '!' && !message.author.bot) {
+                this.sendMessage('I don\'t have permission to send messages in this channel', message.author);
+            }
             return;
         }
     

@@ -10,11 +10,13 @@ translate.help = `Translate using keys from one lang to another\nCodes can be on
 translate.params = [
     {
         name: 'translate from',
-        type: 'string'
+        type: 'list',
+        allowedValues: codes
     },
     {
         name: 'translate to',
-        type: 'string'
+        type: 'list',
+        allowedValues: codes
     },
     {
         name: 'stext',
@@ -23,10 +25,6 @@ translate.params = [
 ];
 translate.executeViaIntegration = true;
 translate.callback = async function(_, src: string, dest: string, text: string) {
-	if (codes.indexOf(src) === -1 || codes.indexOf(dest) === -1) {
-       return 'Invalid language codes';
-    }
-
     let url = "https://frengly.com/frengly/data/translateREST";
     let payload = {
         src: src,

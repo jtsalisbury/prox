@@ -145,9 +145,9 @@ export let cmdHelp = function(command: Command, alias: string): string {
     let paramHelp = "";
     
     command.getParams().forEach(param => {
-        let optText = param.optional ? 'optional, default: ' + (param.default == undefined ? 'nothing' : param.default) : 'required';
+        let optText = param.isOptional() ? 'optional, default: ' + (param.getDefault() == undefined ? 'nothing' : param.getDefault()) : 'required';
 
-        paramHelp += `<${param.name} (${param.type}, ${optText})> `;
+        paramHelp += `<${param.getName()} (${param.getType()}, ${optText})> `;
     });
 
     return `\`!${alias} ${paramHelp}\n\``

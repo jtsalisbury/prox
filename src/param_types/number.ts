@@ -1,11 +1,11 @@
-import { IBaseParamHandler } from "../models/IBase";
+import { BaseParam } from "../models/BaseParam";
 
-let number: IBaseParamHandler = <IBaseParamHandler>{};
-number.name = 'number';
-number.convert = function(value) {
-    let converted = Number(value);
+export default class NumberParam extends BaseParam {
+    paramType = 'number';
 
-    return !isNaN(converted) ? converted : null;
+    convert = function(value, _) {
+        let converted = Number(value);
+
+        return !isNaN(converted) ? converted : null;
+    }
 }
-
-export let params = [number];

@@ -16,6 +16,14 @@ import MessageService from './services/message';
 import initializeWeb from './bot-web';
 import { IBaseCommand } from './models/IBase';
 
+let paramTypes = {};
+glob.sync(__dirname + '/param_types/*.js').forEach(async file => {
+    let paramClass = await import(path.resolve(file));
+    let paramType = new paramClass.default();
+
+    paramTypes[paramType.getParamType()] = paramType;
+});
+
 glob.sync(__dirname + '/commands/*.js').forEach(async file => {
     let required = await import(path.resolve(file));
 
@@ -49,7 +57,17 @@ glob.sync(__dirname + '/commands/*.js').forEach(async file => {
         // Don't forget parameters!
         if (cmdData.params) {
             cmdData.params.forEach(paramData => {
-                cmd.addParam(paramData.name, paramData.type, paramData.optional == undefined ? false : paramData.optional, paramData.default);
+                // TODO: instantiate param type here
+                let paramType = paramTypes[paramData.type];
+                if (!paramType) {
+                    console.error('Invalid param type (' + paramData.type +') with \'' + paramData.name + '\' for ' + cmd.getName() + ' - this will cause errors');
+                    return;
+                }
+
+                let createdParam = Object.create(paramType);
+                Object.assign(createdParam, paramData);
+
+                cmd.addParam(createdParam);
             });
         }
     });
