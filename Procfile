@@ -1,1 +1,1 @@
-web: node bot.js
+web: ts-node ./src/bot.ts

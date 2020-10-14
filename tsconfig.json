@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "allowJs": true,
+        "moduleResolution": "node",
+        "pretty": true,
+        "sourceMap": true,
+        "target": "es6",
+        "resolveJsonModule": true,
+        "outDir": "./dist",
+        "esModuleInterop": true
+    },
+    "include": [
+        "./src/*",
+        "./src/commands/*",
+        "./src/music_handlers/*",
+        "./src/models/*",
+        "./src/services/*",
+        "./src/param_types/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
+    "staticIncludes": [
+        "./src/assets"
+    ]
+}
