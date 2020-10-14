@@ -1,5 +1,5 @@
 import GuildManager from '../models/GuildManager';
-import MessageService from '../services/message';
+import { sendMessage, messageChannelById } from '../services/message';
 import EventService from '../services/events';
 import { IBaseCommand } from '../models/IBase';
 import { Client, Message } from 'discord.js';
@@ -63,7 +63,7 @@ create.callback = async function(message: Message, title: string, channelName: s
     Interested in joining? Reply with ✅ below!
     `;
 
-    let generalMessage = await MessageService.sendMessage(format, message.channel);
+    let generalMessage = await sendMessage(format, message.channel);
     generalMessage[0].react('✅')
 
     let guild = GuildManager.getGuild(message.guild.id);
@@ -91,7 +91,7 @@ create.callback = async function(message: Message, title: string, channelName: s
     });
 
     // Send a message to the channel about what the event is
-    let msg = await MessageService.sendMessage(`> This channel is for **${title}**\nHappening on: ${timeStr}`, newChannel);
+    let msg = await sendMessage(`> This channel is for **${title}**\nHappening on: ${timeStr}`, newChannel);
     msg[0].pin();
 
     // Create the event
@@ -192,10 +192,10 @@ async function manageUserInEventChannel(user, eventChannelId, guild, shouldAddUs
         await channel.overwritePermissions(newPerms)
         if (shouldAddUser) {
             if (!userAlreadyIn) {
-                MessageService.sendMessage(`Welcome to the event, <@${user.id}>!`, channel);
+                sendMessage(`Welcome to the event, <@${user.id}>!`, channel);
             }
         } else {
-            MessageService.sendMessage(`<@${user.id}> has left the event`, channel);
+            sendMessage(`<@${user.id}> has left the event`, channel);
         }
     }
 }
@@ -253,7 +253,7 @@ module.exports.initialize = function(client: Client) {
                 guild.events.forEach((event, key) => {
                     if (event.date.getTime() <= now.getTime() && !event.eventPassed) {
                         let message = `@everyone, **${event.title}** is starting now!`;
-                        MessageService.messageChannelById(message, discordGuild, event.channelId);
+                        messageChannelById(message, discordGuild, event.channelId);
 
                         event.eventPassed = true;
                     }

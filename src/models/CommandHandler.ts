@@ -1,6 +1,6 @@
 import Command from './Command.js';
 import GuildManager from './GuildManager';
-import MessageService from '../services/message';
+import { sendMessage, sendCommandError } from '../services/message';
 import * as _utils from '../services/utils';
 
 import { Message, TextChannel } from 'discord.js';
@@ -74,7 +74,7 @@ class CommandHandler {
 
         let canExec = this.canExecute(message, activeCommand, isExternal, activeCommand.getExternal());
         if (canExec !== true) {
-            MessageService.sendMessage(canExec, message.channel)
+            sendMessage(canExec, message.channel)
             return;
         }
 
@@ -98,7 +98,7 @@ class CommandHandler {
             let converted = param.convert(curVal, message.guild.members);
 
             if ((converted === undefined || converted == null) && !param.isOptional()) {
-                MessageService.sendMessage('Invalid value for ' + param.getName(), message.channel); // TODO: Put expected value
+                sendMessage('Invalid value for ' + param.getName(), message.channel); // TODO: Put expected value
                 validParams = false;
             } else if ((converted === undefined || converted == null) && param.isOptional()) {
                 parsedLine[parseIndex] = param.getDefault() != undefined ? param.getDefault() : null;
@@ -112,7 +112,7 @@ class CommandHandler {
         });
 
         if (!validParams) {
-            MessageService.sendCommandError(activeCommand, alias, message.channel);
+            sendCommandError(activeCommand, alias, message.channel);
             return;
         }
 

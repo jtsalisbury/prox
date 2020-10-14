@@ -11,7 +11,7 @@ import logger from 'winston';
 import EventService from './services/events';
 import CommandHandler from './models/CommandHandler';
 import GuildManager from './models/GuildManager';
-import MessageService from './services/message';
+import { processMessage, sendMessage } from './services/message';
 
 import initializeWeb from './bot-web';
 import { IBaseCommand } from './models/IBase';
@@ -136,9 +136,6 @@ EventService.on('prox.guildsLoaded', async function (loaded) {
     }
     saveGuilds();
 
-    // Initialize message service
-    await MessageService.initialize();
-
     // Initialize web handler
     initializeWeb(client);
 })
@@ -176,9 +173,9 @@ client.on('guildDelete', (guild: any) => {
 
 // We have a new message
 client.on('message', async message => {
-    let response = await MessageService.process(message);
+    let response = await processMessage(message);
 
     if (response) {
-        MessageService.sendMessage(response, message.channel);
+        sendMessage(response, message.channel);
     }
 });

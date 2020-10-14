@@ -1,6 +1,6 @@
 import GuildManager from '../models/GuildManager';
 import IntegrationManager from '../models/IntegrationManager';
-import MessageService from '../services/message';
+import { sendMessage } from '../services/message';
 
 import crypto from 'crypto';
 import { IBaseCommand } from '../models/IBase';
@@ -43,7 +43,7 @@ add.callback = async function(message: Message, name: string, sync?: boolean) {
 
         guild.integrations.push(intData);
 
-        MessageService.sendMessage(`We've added your integration. Please use this secret (sha1 hash, hex digest) with these guidelines:\n> If you're using rest, set it as the X-PROX-Signature.\n> If you're using socket.io, please send it in the authorization event as the signature.\nSecret: ${randomString}\n**Please delete this message once you have saved your secret.**`, message.author);
+        sendMessage(`We've added your integration. Please use this secret (sha1 hash, hex digest) with these guidelines:\n> If you're using rest, set it as the X-PROX-Signature.\n> If you're using socket.io, please send it in the authorization event as the signature.\nSecret: ${randomString}\n**Please delete this message once you have saved your secret.**`, message.author);
 
         IntegrationManager.addIntegration(message.guild.id, intData)
 

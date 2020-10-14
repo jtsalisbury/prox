@@ -1,5 +1,5 @@
 import SpeechInterpreter from './SpeechInterpreter';
-import MessageService from '../services/message';
+import { messageChannelById } from '../services/message';
 import { User, VoiceChannel, VoiceConnection } from 'discord.js';
 
 export default class VoiceManager {
@@ -68,7 +68,7 @@ export default class VoiceManager {
                 }
 
                 if (guildState.externalMessageChannelId && guildState.externalMessageChannelId.length > 0) {
-                    MessageService.messageChannelById(response, channel.guild, guildState.externalMessageChannelId);
+                    messageChannelById(response, channel.guild, guildState.externalMessageChannelId);
                 }
 
             }).catch(err => {

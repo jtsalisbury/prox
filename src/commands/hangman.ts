@@ -1,6 +1,6 @@
-import { GuildMember, Message, TextChannel, User } from 'discord.js';
+import { Message, TextChannel, User } from 'discord.js';
 import { IBaseCommand } from '../models/IBase';
-import MessageService from '../services/message';
+import { sendMessage } from '../services/message';
 
 let gameQueue = new Map<string, HangmanGame> ();
 
@@ -62,7 +62,7 @@ function startGame(guildId: string, word: string) {
         }
     })
 
-    MessageService.sendMessage('Okay, here we go! You can guess by sendMessageing a single letter, or you can try to guess the whole word', game.channel);
+    sendMessage('Okay, here we go! You can guess by sendMessageing a single letter, or you can try to guess the whole word', game.channel);
     print(guildId);
 }
 
@@ -71,11 +71,11 @@ function stopGame(guildId: string, channel: TextChannel) {
     let game = getGame(guildId);
 
     if (!game) {
-        MessageService.sendMessage('No hangman game is running', channel);
+        sendMessage('No hangman game is running', channel);
         return;
     }
 
-    MessageService.sendMessage(`The hangman game has ended. The word was: ${game.word}`, channel);
+    sendMessage(`The hangman game has ended. The word was: ${game.word}`, channel);
 
     gameQueue.delete(guildId);
 }
@@ -127,7 +127,7 @@ function print(guildId: string) {
 
     // Combine the message
     let combined = `\`\`\`${man}\`\`\`\`\`\`Guesses: ${guesses}\nPhrase: ${word}\`\`\``;
-    MessageService.sendMessage(combined, game.channel);
+    sendMessage(combined, game.channel);
 }
 
 function guess(message: Message) {
@@ -136,7 +136,7 @@ function guess(message: Message) {
 
     // If we've already made an incorrect guess
     if (game.guesses[guess]) {
-        MessageService.sendMessage('Somebody already guessed that!', message.channel);
+        sendMessage('Somebody already guessed that!', message.channel);
         print(message.guild.id);
         return;
     }
@@ -144,19 +144,19 @@ function guess(message: Message) {
     // If the word equals the guess
     if (guess == game.word.toLowerCase()) {
         stopGame(message.guild.id, <TextChannel>message.channel);
-        MessageService.sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
+        sendMessage(`Whoa! That was a great guess! Congrats to <@${message.author.id}> for guessing the word!`, message.channel);
     } else if (game.requiredLetters[guess] != undefined) {
         // If the guess is a required letter, determine if it's been guessed or not
         if (game.requiredLetters[guess] == false) {
-            MessageService.sendMessage('Nice guess!', message.channel);
+            sendMessage('Nice guess!', message.channel);
             game.requiredLetters[guess] = true;
         } else {
-            MessageService.sendMessage('Somebody already guessed that!', message.channel);
+            sendMessage('Somebody already guessed that!', message.channel);
         }
     } else {
         // Incorrect guess
         game.guesses[guess] = true;
-        MessageService.sendMessage('Not quite!', message.channel);
+        sendMessage('Not quite!', message.channel);
     }
     
     // Determine if all the letters have been guessed
@@ -169,13 +169,13 @@ function guess(message: Message) {
 
     if (allTrue) {
         stopGame(message.guild.id, <TextChannel>message.channel);
-        MessageService.sendMessage('Congrats! You guessed the word!', message.channel);
+        sendMessage('Congrats! You guessed the word!', message.channel);
     }
 
     // We lost :$(
     if (Object.keys(game.guesses).length == 7) {
         stopGame(message.guild.id, <TextChannel>message.channel);
-        MessageService.sendMessage(`You've lost :&(`, message.channel);
+        sendMessage(`You've lost :&(`, message.channel);
     }
 
     print(message.guild.id);
@@ -200,7 +200,7 @@ hangman.callback = async function(message: Message, action: string) {
 
         newGame(message, <User>message.author);
 
-        MessageService.sendMessage('Okay, let\'s get this game started! I need you to send me the word you want to use', message.author);
+        sendMessage('Okay, let\'s get this game started! I need you to send me the word you want to use', message.author);
         return `Alright <@${message.author.id}>, I've sent you a DM. Please respond there to start the game!`;
     } else if (action == 'stop') {
         stopGame(message.guild.id, <TextChannel>message.channel)
@@ -223,7 +223,7 @@ module.exports.initialize = function(client) {
                     if (validateWord(message.content)) {
                         startGame(key, message.content);
                     } else {
-                        MessageService.sendMessage('That word isn\'t valid! We need at least one character', message.author);
+                        sendMessage('That word isn\'t valid! We need at least one character', message.author);
                     }
                 }
             })

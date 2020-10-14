@@ -1,4 +1,4 @@
-import MessageService from '../services/message';
+import { sendMessage } from '../services/message';
 import GuildManager from '../models/GuildManager';
 import VoiceManager from '../models/VoiceManager';
 
@@ -28,7 +28,7 @@ let verifyChannelPerms = function(message: Message): boolean {
     // Verify that the user is in a voice channel
     let voiceCh = message.member.voice.channel;
     if (!voiceCh) {
-        MessageService.sendMessage('You need to be in a voice channel to play music', message.channel);
+        sendMessage('You need to be in a voice channel to play music', message.channel);
         return false;
     }
 
@@ -75,7 +75,7 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
     if (queue.songs.length === 0) {
         voiceMgr.delete(MUSIC_CTX_ID);
 
-        MessageService.sendMessage('No songs left in the queue', channel);
+        sendMessage('No songs left in the queue', channel);
         return;
     }
 
@@ -100,7 +100,7 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
         playNextSong(guildId, channel);
     });
     dispatcher.on('error', err => {
-        MessageService.sendMessage('Dispatcher error: ' + err, channel);
+        sendMessage('Dispatcher error: ' + err, channel);
     });
     dispatcher.on('debug', debugInfo => {
         console.log(debugInfo);
@@ -144,7 +144,7 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
         artistStr = `by **${curSongArtists[0]}** `;
     }
 
-    MessageService.sendMessage(`Now playing **${curSong.title}** ${artistStr}at **${queue.volume}%**\n${nextSong}`, channel);
+    sendMessage(`Now playing **${curSong.title}** ${artistStr}at **${queue.volume}%**\n${nextSong}`, channel);
 }
 
 // Note: artists, songs can only be tracked if the info is on youtube

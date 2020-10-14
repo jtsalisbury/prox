@@ -6,7 +6,7 @@ import bodyParser from 'body-parser';
 
 import GuildManager from './models/GuildManager';
 import IntegrationManager from './models/IntegrationManager';
-import MessageService from './services/message';
+import { messageChannelById, sendMessage, processMessage } from './services/message';
 import CommandHandler from './models/CommandHandler';
 
 import logger from 'winston';
@@ -109,7 +109,7 @@ export default function initializeWeb(client) {
             }
 
             if (guildState.externalMessageChannelId && guildState.externalMessageChannelId.length > 0) {
-                MessageService.messageChannelById(message, guild, guildState.externalMessageChannelId);
+                messageChannelById(message, guild, guildState.externalMessageChannelId);
             }
         })
     });
@@ -151,7 +151,7 @@ export default function initializeWeb(client) {
             return false;
         }
 
-        MessageService.sendMessage(`[${intData.name}] **${sender}:** `+ message, discordChannel);
+        sendMessage(`[${intData.name}] **${sender}:** `+ message, discordChannel);
 
         // Construct a *somewhat* correct message object
         let msgObj = {
@@ -160,10 +160,10 @@ export default function initializeWeb(client) {
             content: message
         }
 
-        let resMsg = await MessageService.process(msgObj, true);   
+        let resMsg = await processMessage(msgObj, true);   
 
         if (resMsg) {
-            MessageService.sendMessage(resMsg, discordChannel);
+            sendMessage(resMsg, discordChannel);
         }
 
         return resMsg ? resMsg : 'none';
