@@ -52,7 +52,7 @@
         "build": "tsc",
         "dev": "ts-node ./dist/bot.js",
         "format": "prettier-standard '**/*.ts'",
-        "postbuild": "ts-node build.ts"
+        "postbuild": "ts-node ./build.ts"
     },
     "devDependencies": {
         "@types/express": "^4.17.8",
