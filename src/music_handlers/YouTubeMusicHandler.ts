@@ -87,7 +87,8 @@ class YouTubeMusicHandler implements IBaseMusicHandler {
                 url: `https://www.youtube.com/watch?v=${related.id}`,
                 author: related.author,
                 autoplay: true,
-                artists: artists
+                artists: artists,
+                type: this.getName()
             };
         } else {
             return 'No related videos available';
