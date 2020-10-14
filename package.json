@@ -49,7 +49,7 @@
         "ytdl-core-discord": "^1.2.3"
     },
     "scripts": {
-        "start": "nodemon ./dist/bot.js",
+        "start": "node ./dist/bot.js",
         "build": "tsc",
         "dev": "ts-node ./dist/bot.js",
         "format": "prettier-standard '**/*.ts'",
