@@ -13,6 +13,7 @@ export interface IBaseCommand {
     aliases: string[];
     prettyName: string;
     help: string;
+    category: string;
     params: IBaseParamData[];
     callback: (Message, ...any) => Promise<String> | Promise<void> | void;
     userPermissions?: string[];

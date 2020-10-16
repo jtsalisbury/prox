@@ -5,6 +5,7 @@ let weather = <IBaseCommand>{};
 weather.aliases = ['weather'];
 weather.prettyName = 'Weather';
 weather.help = 'Check the weather in a location';
+weather.category = 'Utilities';
 weather.params = [
     {
         name: 'location (city or state)',

@@ -9,6 +9,7 @@ let create: IBaseCommand = <IBaseCommand>{};
 create.aliases = ['create'];
 create.prettyName = 'Create Event';
 create.help = 'Create a new event';
+create.category = 'Events';
 create.params = [
     {
         name: 'title',
@@ -115,6 +116,7 @@ let cancel: IBaseCommand = <IBaseCommand>{};
 cancel.aliases = ['cancel', 'end'];
 cancel.prettyName = 'End or cancel event';
 cancel.help = 'End or cancel an event. Must be executed in event channel. Only the creator or admin can end or cancel.'
+cancel.category = 'Events';
 cancel.executeViaIntegration = false;
 cancel.callback = function(message: Message) {
     let guild = GuildManager.getGuild(message.guild.id);
@@ -136,6 +138,7 @@ let leave: IBaseCommand = <IBaseCommand>{};
 leave.aliases = ['leave'];
 leave.prettyName = 'Leave Event';
 leave.help = 'Leave an event. Must be executed in event channel.';
+leave.category = 'Events';
 leave.executeViaIntegration = false;
 leave.callback = function(message: Message) {
     let guild = GuildManager.getGuild(message.guild.id);

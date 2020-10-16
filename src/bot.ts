@@ -57,6 +57,7 @@ glob.sync(__dirname + '/commands/*.js').forEach(async file => {
             cmdData.aliases,
             cmdData.prettyName,
             cmdData.help,
+            cmdData.category,
             cmdData.callback,
             cmdData.userPermissions,
             cmdData.executePermissions,

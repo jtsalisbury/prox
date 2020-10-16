@@ -11,6 +11,7 @@ add.aliases = ['addint'];
 add.prettyName = 'Add Integration';
 add.executeViaIntegration = false;
 add.help = 'Adds an integration';
+add.category = 'Integrations';
 add.userPermissions = ['MANAGE_GUILD'];
 add.params = [
     {

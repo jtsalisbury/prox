@@ -4,6 +4,7 @@ export default class Command {
     private aliases: string[];
     private prettyName: string;
     private help: string;
+    private category: string;
     private callback: any;
     private params: BaseParam[];
     private reqUserPerms: string[];
@@ -13,6 +14,7 @@ export default class Command {
     constructor(aliases: string[], 
                 prettyName: string, 
                 help: string, 
+                category: string,
                 callback: (Message, ...any) => Promise<String> | Promise<void>  | void, 
                 userPerms?: string[], 
                 execPerms?: string[], 
@@ -21,6 +23,7 @@ export default class Command {
         this.aliases = aliases;
         this.prettyName = prettyName;
         this.help = help;
+        this.category = category;
         this.callback = callback;
         this.params = [];
         this.reqUserPerms = userPerms;
@@ -48,6 +51,10 @@ export default class Command {
 
     public getHelp(): string {
         return this.help;
+    }
+
+    public getCategory(): string {
+        return this.category;
     }
 
     public getParams(): BaseParam[] {

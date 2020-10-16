@@ -7,7 +7,8 @@ import { Message, TextChannel } from 'discord.js';
 let ping = <IBaseCommand>{};
 ping.aliases = ['ping'];
 ping.prettyName = 'Ping';
-ping.help = 'Yo';
+ping.help = 'Pings Prox';
+ping.category = 'Misc';
 ping.executeViaIntegration = true;
 ping.callback = async function() {
     return 'Pong!';
@@ -17,6 +18,7 @@ let git = <IBaseCommand>{};
 git.aliases = ['git'];
 git.prettyName = 'GitHub';
 git.help = 'View this on GitHub';
+git.category = 'Misc';
 git.executeViaIntegration = true;
 git.callback = async function() {
     return 'Interested in contributing? Find the project at https://github.com/jtsalisbury/prox';
@@ -26,6 +28,7 @@ let gimme = <IBaseCommand>{};
 gimme.aliases = ['gimme'];
 gimme.prettyName = 'Gimme';
 gimme.help = 'Gimme a random meme';
+gimme.category = 'Misc';
 gimme.executeViaIntegration = true;
 gimme.callback = async function() {
     let res: any = await _utils.HTTPGet('https://meme-api.herokuapp.com/gimme', {});
@@ -37,6 +40,7 @@ let say = <IBaseCommand>{};
 say.aliases = ['say'];
 say.prettyName = 'Say';
 say.help = 'Make the bot say something!';
+say.category = 'Misc';
 say.executeViaIntegration = true;
 say.params = [
     {
@@ -59,6 +63,7 @@ let insult = <IBaseCommand>{};
 insult.aliases = ['insult'];
 insult.prettyName = 'Insult';
 insult.help = 'Generate an insult';
+insult.category = 'Misc';
 insult.executeViaIntegration = false;
 insult.params = [
     {
@@ -87,6 +92,7 @@ let trump = <IBaseCommand>{};
 trump.aliases = ['trump'];
 trump.prettyName = 'Trump';
 trump.help = 'Gets a random Trump quote';
+trump.category = 'Misc';
 trump.executeViaIntegration = false;;
 trump.callback = async function(message: Message) {
     let res: any = await _utils.HTTPGet('https://api.whatdoestrumpthink.com/api/v1/quotes/random');
@@ -102,6 +108,7 @@ let summit = <IBaseCommand>{};
 summit.aliases = ['summit'];
 summit.prettyName = 'summit';
 summit.help = 'Ping summit.nhacks.dev';
+summit.category = 'Misc';
 summit.executeViaIntegration = false;;
 summit.callback = async function(message: Message) {
     try {

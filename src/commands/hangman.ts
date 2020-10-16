@@ -185,6 +185,7 @@ let hangman = <IBaseCommand>{};
 hangman.aliases = ['hangman'];
 hangman.prettyName = 'Hangman';
 hangman.help = 'Controls hangman';
+hangman.category = 'Games'
 hangman.executeViaIntegration = false;
 hangman.params = [
     {

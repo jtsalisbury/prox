@@ -34,6 +34,7 @@ let cocktail: IBaseCommand = <IBaseCommand>{};
 cocktail.aliases = ['cocktail', 'drink'];
 cocktail.prettyName = 'Get a cocktail';
 cocktail.help = 'Gets info about a cocktail (or a random one!)';
+cocktail.category = 'Misc';
 cocktail.params = [
     {
         name: 'drink name',

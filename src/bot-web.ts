@@ -51,6 +51,7 @@ export default function initializeWeb(client) {
             results.push({
                 prettyName: cmdObj.getName(),
                 help: cmdObj.getHelp(),
+                category: cmdObj.getCategory(),
                 aliases: cmdObj.getAliases(),
                 params: cmdObj.getParams(),
                 userPermissions: cmdObj.getUserPermissions(),
@@ -88,7 +89,7 @@ export default function initializeWeb(client) {
 
     // Status updates
     app.get('/', (req, res) => {
-        res.send('Server is up!');
+        res.send('Prox is up!');
     });
 
     // When GitHub sends a pull request
@@ -251,4 +252,5 @@ export default function initializeWeb(client) {
     })
 
     serv.listen(process.env.PORT);
+    logger.info('Listening on port ' + process.env.PORT);
 }

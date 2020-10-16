@@ -7,6 +7,7 @@ let join = <IBaseCommand>{};
 join.aliases = ['join'];
 join.prettyName = 'Join Voice Channel';
 join.help = 'Joins a voice channel and prepares Prox to listen for voice input';
+join.category = 'Speech';
 join.callback = async function (message: Message) {
     let voiceMgr = GuildManager.getVoiceManager(message.guild.id);
 
@@ -23,6 +24,7 @@ let leave = <IBaseCommand>{};
 leave.aliases = ['leave'];
 leave.prettyName = 'Leave Voice Channel';
 leave.help = 'Leaves a voice channel';
+leave.category = 'Speech';
 leave.callback = function (message: Message) {
     let voiceMgr = GuildManager.getVoiceManager(message.guild.id);
 
@@ -34,7 +36,8 @@ leave.callback = function (message: Message) {
 let speech = <IBaseCommand>{};
 speech.aliases = ['speech'];
 speech.prettyName = 'Enable or disable speech';
-speech.help = 'Allows or revokes Prox\'s ability to recognize your voice';
+speech.help = 'Allows or revokes Prox\'s ability to recognize your voice. When disabled, Prox will not record anything. Disabled by default.';
+speech.category = 'Speech';
 speech.params = [{
     name: 'state (enable, disable)',
     type: 'string'

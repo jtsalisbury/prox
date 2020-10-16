@@ -8,6 +8,7 @@ let getStat = <IBaseCommand>{};
 getStat.aliases = ['stat', 'stats'];
 getStat.prettyName = 'Get Stats';
 getStat.help = 'Gets the requested highest stats for (messages, usage, artists, songs, married, fucked, killed)';
+getStat.category = 'Utilities';
 getStat.params = [{
     name: 'statistic',
     type: 'string'

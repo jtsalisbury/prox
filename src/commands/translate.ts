@@ -7,6 +7,7 @@ let translate = <IBaseCommand>{};
 translate.aliases = ['translate'];
 translate.prettyName = 'Translate';
 translate.help = `Translate using keys from one lang to another\nCodes can be one of ${codes.join()}`;
+translate.category = 'Utilities';
 translate.params = [
     {
         name: 'translate from',

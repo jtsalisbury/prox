@@ -245,6 +245,7 @@ let volume = <IBaseCommand>{};
 volume.aliases = ['volume'];
 volume.prettyName = 'Set Volume';
 volume.help = 'Sets the music volume to a number between 0 and 100';
+volume.category = 'Music';
 volume.params = [
     {
         name: 'volume',
@@ -275,6 +276,7 @@ let autoplay = <IBaseCommand>{}
 autoplay.aliases = ['autoplay'];
 autoplay.prettyName = 'Autoplay';
 autoplay.help = 'Enable or disable autoplaying of related videos from YouTube';
+autoplay.category = 'Music';
 autoplay.params = [
     {
         name: 'state (enable, disable)',
@@ -348,6 +350,7 @@ let play = <IBaseCommand>{};
 play.aliases = ['play'];
 play.prettyName = 'Play Song';
 play.help = 'Stops the current song and plays a new one; maintains active queue. Can provide: Youtube (playlist, video, live stream, search words), SoundCloud (track), Spotify (album, playlist).';
+play.category = 'Music';
 play.params = [
     {
         name: 'link/search criteria',
@@ -395,6 +398,7 @@ let enqueue = <IBaseCommand>{};
 enqueue.aliases = ['add', 'a'];
 enqueue.prettyName = 'Queue a Song';
 enqueue.help = 'Can provide: Youtube (playlist, video, live stream, search words), SoundCloud (track), Spotify (album, playlist).';
+enqueue.category = 'Music';
 enqueue.params = [
     {
         name: 'link/search criteria',
@@ -439,6 +443,7 @@ let dequeue = <IBaseCommand>{};
 dequeue.aliases = ['remove', 'r'];
 dequeue.prettyName = 'Dequeue Song';
 dequeue.help = 'Removes the next song from the queue';
+dequeue.category = 'Music';
 dequeue.executeViaIntegration = true;
 dequeue.callback = async function(message: Message) {
     let guildId = message.guild.id;
@@ -470,6 +475,7 @@ let skip = <IBaseCommand>{};
 skip.aliases = ['skip'];
 skip.prettyName = 'Skip Song';
 skip.help = 'Skips the currently playing song';
+skip.category = 'Music';
 skip.executeViaIntegration = true;
 skip.callback = async function(message: Message) {
     let guildId = message.guild.id;
@@ -507,6 +513,7 @@ let clear = <IBaseCommand>{};
 clear.aliases = ['clear', 'empty'];
 clear.prettyName = 'Clear Queue';
 clear.help = 'Clears the queue but keeps playing the current song';
+clear.category = 'Music';
 clear.executeViaIntegration = true;
 clear.callback = async function(message: Message) {
     let guildId = message.guild.id;
@@ -526,6 +533,7 @@ let pause = <IBaseCommand>{};
 pause.aliases = ['pause'];
 pause.prettyName = 'Pause Stream';
 pause.help = 'Pauses the stream';
+pause.category = 'Music';
 pause.executeViaIntegration = true;
 pause.callback = async function(message: Message) {
     let guildId = message.guild.id;
@@ -545,6 +553,7 @@ let resume = <IBaseCommand>{};
 resume.aliases = ['resume'];
 resume.prettyName = 'Resume Stream';
 resume.help = 'Resumes the stream';
+resume.category = 'Music';
 resume.executeViaIntegration = true;
 resume.callback = async function(message: Message) {
     let guildId = message.guild.id;
@@ -568,6 +577,7 @@ let getQueue = <IBaseCommand>{};
 getQueue.aliases = ['queue', 'list'];
 getQueue.prettyName = 'Queue';
 getQueue.help = 'Prints the first five songs of the queue';
+getQueue.category = 'Music';
 getQueue.executeViaIntegration = true;
 getQueue.callback = async function(message: Message) {
     let guildId = message.guild.id;

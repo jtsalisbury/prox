@@ -5,6 +5,7 @@ let calc = <IBaseCommand>{};
 calc.aliases = ['calc', 'calculate'];
 calc.prettyName = 'Calculate';
 calc.help = 'Evaluate a math expression';
+calc.category = 'Utilities';
 calc.executeViaIntegration = true;
 calc.params = [
     {

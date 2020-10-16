@@ -15,6 +15,7 @@ class CommandHandler {
     public registerCommand (aliases: string[], 
                     name: string, 
                     help: string, 
+                    category: string,
                     callback: (Message, ...any) => Promise<String> | Promise<void>  | void, 
                     userPerms?: string[], 
                     execPerms?: string[], 
@@ -26,7 +27,7 @@ class CommandHandler {
         }
 
         // Create a new command object
-        let cmd = new Command(usableAliases, name, help, callback, userPerms, execPerms, external);
+        let cmd = new Command(usableAliases, name, help, category, callback, userPerms, execPerms, external);
 
         // Register for each alias
         usableAliases.forEach(alias => {

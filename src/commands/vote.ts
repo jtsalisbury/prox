@@ -7,6 +7,7 @@ let create = <IBaseCommand>{};
 create.aliases = ['createvote'];
 create.prettyName = 'Create Vote';
 create.help = 'Create a new vote';
+create.category = 'Vote';
 create.params = [
     {
         name: 'text',
@@ -66,6 +67,7 @@ let vote = <IBaseCommand>{};
 vote.aliases = ['vote'];
 vote.prettyName = 'Cast Vote';
 vote.help = 'Cast your vote for the active vote in the channel';
+vote.category = 'Vote';
 vote.params = [
     {
         name: 'option',
@@ -110,6 +112,7 @@ let deleteVote = <IBaseCommand>{};
 deleteVote.aliases = ['endvote'];
 deleteVote.prettyName = 'End Vote';
 deleteVote.help = 'Ends the active vote in the channel';
+deleteVote.category = 'Vote';
 deleteVote.executeViaIntegration = false;
 deleteVote.callback = async function(message: Message) {
     let voteObj = voteInfo[message.channel.id];

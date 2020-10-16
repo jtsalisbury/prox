@@ -6,6 +6,7 @@ let define = <IBaseCommand>{};
 define.aliases = ['define'];
 define.prettyName = 'Define';
 define.help = 'Define a term or string provided';
+define.category = 'Utilities';
 define.params = [
     {
         name: 'term',
@@ -29,6 +30,7 @@ let search = <IBaseCommand>{};
 search.aliases = ['search'];
 search.prettyName = 'Search';
 search.help = 'Searches Google for the first result and returns the link';
+search.category = 'Utilities';
 search.params = [
     {
         name: 'term',
