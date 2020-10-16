@@ -7,6 +7,7 @@ import path from 'path';
 
 import utils from 'util';
 import * as _utils from '../services/utils'; // i chose a great name didn't i
+import logger from '../services/logger';
 
 import ytsearch from 'youtube-search';
 
@@ -46,7 +47,7 @@ let getServerQueue = function(guildId: string): ISongQueue {
 let getStream = async function(curSong: ISongData): Promise<object> {
     let handler = MusicHandlers[curSong.type];
     if (!handler) {
-        console.error('No handler available to play ' + curSong.url);
+        logger.error('No handler available to play ' + curSong.url);
         return;
     }
 
@@ -56,7 +57,7 @@ let getStream = async function(curSong: ISongData): Promise<object> {
 let getRelatedVideo = async function(curSong: ISongData): Promise<ISongData> {
     let handler = MusicHandlers[curSong.type];
     if (!handler) {
-        console.error('No handler available to play ' + curSong.url);
+        logger.error('No handler available to play ' + curSong.url);
         return;
     }
 
@@ -103,7 +104,7 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
         sendMessage('Dispatcher error: ' + err, channel);
     });
     dispatcher.on('debug', debugInfo => {
-        console.log(debugInfo);
+        logger.info(debugInfo);
     });
     queue.dispatcher = dispatcher;
 
@@ -220,7 +221,7 @@ async function getSongs(descriptor: string, type: string) {
         }
         
         let result = <any>await ytsearchProm(descriptor, opts).catch(err => {
-            console.log(err);
+            logger.error(err);
         });
 
         if (result.length === 1) {
@@ -604,7 +605,7 @@ export let initialize = function(client) {
 
         MusicHandlers[handler.getName()] = handler;
 
-        console.log(`Music handler loaded: ${handler.getName()}`)
+        logger.info(`Music handler loaded: ${handler.getName()}`)
     });
 }
 

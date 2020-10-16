@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import VoiceManager from './VoiceManager';
 import IntegrationManager from './IntegrationManager';
+import logger from '../services/logger';
 
 class GuildManager {
     private guildCache: Map<string, mongoose.Document>;
@@ -67,7 +68,7 @@ class GuildManager {
 
             this.Guild = mongoose.model('Guild', this.guildSchema);
         } catch (err) {
-            console.error('Connection error: ' + err);
+            logger.error('Connection error: ' + err);
         }
     }
 
@@ -87,13 +88,18 @@ class GuildManager {
                 this.voiceCache.set(guildId, new VoiceManager());
 
                 newGuild.save();
-                resolve(newGuild);
-                
                 this.guildCache.set(guildId, newGuild);
+                resolve(newGuild);
             } else {
-                this.Guild.findOne({ guildId: guildId }, (err, res) => {
+                this.Guild.findOne({ guildId: guildId }, async (err, res) => {
                     if (err) {
-                        console.log(err);
+                        logger.error(err);
+                        return;
+                    }
+
+                    if (!res) {
+                        let newGuild = await this.addGuild(guildId, true);
+                        resolve(newGuild);
                         return;
                     }
 
@@ -114,7 +120,7 @@ class GuildManager {
         this.guildCache.set(guildId, null);
         this.Guild.deleteOne({ guildId: guildId }, (err) => {
             if (err) {
-                console.log(err);
+                logger.error(err);
             }
         });
     }

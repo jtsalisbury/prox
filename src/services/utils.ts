@@ -141,6 +141,11 @@ export let parseLine = function (line: string): string[] {
     return parts;
 };
 
+/**
+ * Returns a formatted help string for a command
+ * @param command, the command
+ * @param alias, the command alias
+ */
 export let cmdHelp = function(command: Command, alias: string): string {
     let paramHelp = "";
     

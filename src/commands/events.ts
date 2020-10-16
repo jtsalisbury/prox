@@ -1,6 +1,7 @@
 import GuildManager from '../models/GuildManager';
 import { sendMessage, messageChannelById } from '../services/message';
 import EventService from '../services/events';
+import logger from '../services/logger';
 import { IBaseCommand } from '../models/IBase';
 import { Client, Message } from 'discord.js';
 
@@ -239,7 +240,7 @@ module.exports.initialize = function(client: Client) {
 
         // Setup a handler to check for when an event should execute
         async function checkForEvent() {
-            console.log('Checking event status...');
+            logger.info('Checking event status...');
             let now = new Date();
             client.guilds.cache.forEach(discordGuild => {
                 let guild = GuildManager.getGuild(discordGuild.id);

@@ -74,7 +74,10 @@ class CommandHandler {
 
         let canExec = this.canExecute(message, activeCommand, isExternal, activeCommand.getExternal());
         if (canExec !== true) {
-            sendMessage(canExec, message.channel)
+            if (typeof canExec == 'string') {
+                sendMessage(canExec, message.channel)
+            }
+
             return;
         }
 

@@ -9,34 +9,40 @@ import IntegrationManager from './models/IntegrationManager';
 import { messageChannelById, sendMessage, processMessage } from './services/message';
 import CommandHandler from './models/CommandHandler';
 
-import logger from 'winston';
+import logger from './services/logger';
 
 import server from 'http'
 import socketio from 'socket.io';
 
 import socketioAuth from 'socket.io-auth';
+import { Message } from 'discord.js';
 
+// We need to initialize this after our client has been initiated
 export default function initializeWeb(client) {
-
     // Process messages TO our bot via HTTP
     app.post('/message', async (req, res) => {
+        logger.info('HTTP message received');
+        logger.info(req);
         let token = req.header('X-PROX-Signature');
 
         if (token) {
             token = token.toLowerCase();
         }
 
+        // Try and process the command
         let result = await handleIntegration(token, req.body.sender, req.body.message);
         if (!result) {
             res.status(500).send();
             return;
         }
 
+        // Successfully handled!
         res.status(200).send(JSON.stringify({
             response: result
         }));
     });
 
+    // Returns a JSON structure of all available commands
     app.get('/help', async (req, res) => {
         let commands = CommandHandler.getCommands();
 
@@ -74,7 +80,6 @@ export default function initializeWeb(client) {
         }));
     });
 
-
     // GitHub webhook handlers
     let webhookHandler: any = GithubWebHook({ path: '/hooks', secret: process.env.GITHUB_SECRET });
 
@@ -86,6 +91,7 @@ export default function initializeWeb(client) {
         res.send('Server is up!');
     });
 
+    // When GitHub sends a pull request
     webhookHandler.on('pull_request', (repo, data) => {
         if (!client) {
             return;
@@ -99,6 +105,8 @@ export default function initializeWeb(client) {
         let user = data.pull_request.user.login;
         let prUrl = data.pull_request.html_url;
         let message = `**GitHub**: A new pull request has been opened by ${user}.\nView here: <${prUrl}>`;
+
+        logger.info(message);
         
         // Loop through all guilds and send the message
         client.guilds.cache.array().forEach(guild => {
@@ -154,7 +162,7 @@ export default function initializeWeb(client) {
         sendMessage(`[${intData.name}] **${sender}:** `+ message, discordChannel);
 
         // Construct a *somewhat* correct message object
-        let msgObj = {
+        let msgObj = <Message>{
             channel: discordChannel,
             guild: discordGuild,
             content: message
@@ -170,8 +178,6 @@ export default function initializeWeb(client) {
     }
 
     // Socket connections
-    
-
     let serv = server.createServer(app);
     let io = socketio(server);
 
@@ -221,14 +227,14 @@ export default function initializeWeb(client) {
                 });
             });
 
-            console.log('Socket connection established');
+            logger.info('Socket connection established');
         },
         disconnect: (socket) => {
             if (!socket.authorization) {
                 return;
             }
 
-            // Cleanup the cache
+            // Cleanup the cache on disconnect
             let token = socket.authorization;
             let intData = IntegrationManager.getIntegration(token.toLowerCase());
 
@@ -238,7 +244,7 @@ export default function initializeWeb(client) {
 
             delete intData.connections[socket.id];
 
-            console.log('Socket connection terminated');
+            logger.info('Socket connection terminated');
         },
     }, {
         timeout: (process.env.DEBUG_MODE ? 'none' : 1000)

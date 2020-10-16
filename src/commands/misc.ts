@@ -1,7 +1,8 @@
 import * as _utils from '../services/utils';
 import minecraft from 'minecraft-server-util';
+import logger from '../services/logger';
 import { IBaseCommand } from '../models/IBase';
-import { GuildMember, Message, TextChannel } from 'discord.js';
+import { Message, TextChannel } from 'discord.js';
 
 let ping = <IBaseCommand>{};
 ping.aliases = ['ping'];
@@ -110,7 +111,7 @@ summit.callback = async function(message: Message) {
             return 'Summit is up!';
         }
     } catch (e) {
-        console.log(e);
+        logger.error(e);
     }
 
     return 'Summit is down!';

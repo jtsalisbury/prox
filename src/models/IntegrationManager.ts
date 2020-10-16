@@ -1,3 +1,5 @@
+import logger from "../services/logger";
+
 class IntegrationManager {
     private integrationCache: Map<string, any> = null;
 
@@ -7,7 +9,7 @@ class IntegrationManager {
 
     public addIntegration(guildId, integration) {
         if (process.env.DEBUG_MODE) {
-            console.log(integration.signature);
+            logger.info(integration.signature);
         }
 
         this.integrationCache.set(integration.signature, {

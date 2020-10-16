@@ -2,6 +2,7 @@ import { IBaseMusicHandler, ISongData } from '../models/IBase';
 import SpotifyWebApi from 'spotify-web-api-node';
 import YoutubeMusicApi from 'youtube-music-api';
 import YouTubeHandler from './YouTubeMusicHandler';
+import logger from '../services/logger';
 
 //https://open.spotify.com/album/3JfSxDfmwS5OeHPwLSkrfr?si=2HTRJzihRS6soTaYDP2XkA
 class SpotifyMusicHandler implements IBaseMusicHandler {
@@ -38,7 +39,7 @@ class SpotifyMusicHandler implements IBaseMusicHandler {
         this.accessTokenExpiry = expireTime;
         this.spotifyApi.setAccessToken(data.body.access_token);
 
-        console.log('Received new Spotify token. Expires at: ' + expireTime + ', currently it is ' + new Date());
+        logger.info('Received new Spotify token. Expires at: ' + expireTime + ', currently it is ' + new Date());
     }
 
     private validateAuth(): boolean {

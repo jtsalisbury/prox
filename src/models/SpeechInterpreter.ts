@@ -2,6 +2,7 @@ import WitSpeech from 'node-witai-speech';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import util from 'util';
+import logger from '../services/logger';
 
 export default class SpeechInterpreter {
     private contentType = 'audio/wav';
@@ -30,9 +31,9 @@ export default class SpeechInterpreter {
             });
 
             cmd.on('error', (err, stdout, stderr) => {
-                console.log('err: ' + err);
-                console.log('stdout: ' + stdout);
-                console.log('stderr: ' + stderr);
+                logger.error('err: ' + err);
+                logger.error('stdout: ' + stdout);
+                logger.error('stderr: ' + stderr);
 
                 reject(err);
             });
@@ -54,7 +55,7 @@ export default class SpeechInterpreter {
 
             stream.pipe(ws);
             stream.on('error', e => {
-                console.log('Error while parsing audio stream: ' + e);
+                logger.error('Error while parsing audio stream: ' + e);
             });
             stream.on('end', async () => {
                 let stats = fs.statSync(filename);
@@ -89,7 +90,7 @@ export default class SpeechInterpreter {
                 fs.unlinkSync(convName);
                 fs.unlinkSync(originalFilename)
 
-                console.log(output);
+                logger.info(output);
 
                 if (output && 'entities' in output) {
                     let preface = output.entities['preface:preface'] ? output.entities['preface:preface'][0].value : null;

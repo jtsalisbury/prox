@@ -6,7 +6,6 @@ let client = new Discord.Client();
 
 import glob from 'glob';
 import path from 'path';
-import logger from 'winston';
 
 import EventService from './services/events';
 import CommandHandler from './models/CommandHandler';
@@ -16,14 +15,24 @@ import { processMessage, sendMessage } from './services/message';
 import initializeWeb from './bot-web';
 import { IBaseCommand } from './models/IBase';
 
+import logger from './services/logger';
+
+logger.info('Loading param types...');
+
 let paramTypes = {};
+
+// Load param types (bool, string, etc)
 glob.sync(__dirname + '/param_types/*.js').forEach(async file => {
     let paramClass = await import(path.resolve(file));
     let paramType = new paramClass.default();
 
+    logger.debug(`Found param type of ${paramType.getParamType()}`);
     paramTypes[paramType.getParamType()] = paramType;
 });
 
+logger.info('Loading commands...');
+
+// Load commands 
 glob.sync(__dirname + '/commands/*.js').forEach(async file => {
     let required = await import(path.resolve(file));
 
@@ -54,13 +63,14 @@ glob.sync(__dirname + '/commands/*.js').forEach(async file => {
             cmdData.executeViaIntegration
         );
 
+        logger.info(`Loaded ${cmdData.prettyName}`);
+
         // Don't forget parameters!
         if (cmdData.params) {
             cmdData.params.forEach(paramData => {
-                // TODO: instantiate param type here
                 let paramType = paramTypes[paramData.type];
                 if (!paramType) {
-                    console.error('Invalid param type (' + paramData.type +') with \'' + paramData.name + '\' for ' + cmd.getName() + ' - this will cause errors');
+                    logger.error('Invalid param type (' + paramData.type +') with \'' + paramData.name + '\' for ' + cmd.getName() + ' - this will cause errors');
                     return;
                 }
 
@@ -73,33 +83,25 @@ glob.sync(__dirname + '/commands/*.js').forEach(async file => {
     });
 })
 
-logger.remove(logger.transports.Console);
-logger.add(new logger.transports.Console);
-logger.level = 'debug';
-
 // Register a new client
 client.login(process.env.DISCORD_TOKEN);
 
 // We are ready!
 client.on('ready', async () => {
     logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(client.user.username + ' - (' + client.user.id + ')');
+    logger.info('Logged in as: ' + client.user.username + ' - (' + client.user.id + ')');
 
     client.user.setActivity('!help for commands');
 
     await GuildManager.connect();
 
+    logger.info('Loading guilds...');
+
     // Make sure we get up to date documents on each guild
     let guildPromises = [];
     client.guilds.cache.array().forEach(guild => {
-        if (process.env.DEBUG_MODE == 'true') {
-            if (guild.id == '659852554754064410') {
-                guildPromises.push(GuildManager.addGuild(guild.id));
-            }
-        } else {
-            guildPromises.push(GuildManager.addGuild(guild.id));
-        }
+        logger.info(`Guild ${guild.id} loaded`);
+        guildPromises.push(GuildManager.addGuild(guild.id));
     });
 
     // Once we've got all the data, fire an event
@@ -112,6 +114,7 @@ client.on('voiceStateUpdate', (oldState: Discord.VoiceState, newState: Discord.V
     let guildId = newState.guild.id;
     let voiceMgr = GuildManager.getVoiceManager(guildId);
     
+    // If everyone left our voice channel, and we're connected, disconnect
     if (voiceMgr.inChannel() && voiceMgr.getChannel().members.size == 1) {
         voiceMgr.leaveChannel();
     }
@@ -123,7 +126,7 @@ let guilds = [];
 EventService.on('prox.guildsLoaded', async function (loaded) {
     guilds = loaded;
     function saveGuilds() {
-        console.log('Saving guilds...');
+        logger.info('Saving guilds...');
         guilds.forEach(guild => {
             if (!guild) {
                 return;
@@ -134,39 +137,30 @@ EventService.on('prox.guildsLoaded', async function (loaded) {
 
         setTimeout(saveGuilds, 300000);
     }
-    saveGuilds();
+    setTimeout(saveGuilds, 300000);
 
     // Initialize web handler
     initializeWeb(client);
-})
+});
 
 // We joined a guild
 client.on('guildCreate', async guild => {
-    if (process.env.DEBUG_MODE == 'true') {
-        if (guild.id != '659852554754064410') {
-            return;
-        }
-    }
-
     let newGuild = await GuildManager.addGuild(guild.id, true);
     EventService.emit('prox.guildAdded', newGuild);
     guilds.push(newGuild);
+
+    logger.info(`Joined new guild ${guild.id}`);
 });
 
 // We left a guild
 client.on('guildDelete', (guild: any) => {
-    if (process.env.DEBUG_MODE == 'true') {
-        if (guild.id != '659852554754064410') {
-            return;
-        }
-    }
-
     // Make sure we update any cache systems that may hold the doc
     GuildManager.removeGuild(guild.id)
     EventService.emit('prox.guildRemoved', guild.id);
     guilds.forEach((guilds, index) => {
         if (guild.guildId == guild.id) {
             guilds.splice(index, 1);
+            logger.info(`Left guild ${guild.id}`);
         }
     })
 });

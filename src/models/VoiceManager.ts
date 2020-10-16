@@ -1,6 +1,7 @@
 import SpeechInterpreter from './SpeechInterpreter';
 import { messageChannelById } from '../services/message';
 import { User, VoiceChannel, VoiceConnection } from 'discord.js';
+import logger from '../services/logger';
 
 export default class VoiceManager {
     private data: Map<any, any>;
@@ -22,7 +23,7 @@ export default class VoiceManager {
             this.leaveChannel();
         }
 
-        console.log('joining channel...');
+        logger.info('joining channel...');
 
         this.connection = await channel.join();
 
@@ -72,7 +73,7 @@ export default class VoiceManager {
                 }
 
             }).catch(err => {
-                console.log("Error when parsing audio: " + err);
+                logger.error("Error when parsing audio: " + err);
             });
         })
 
