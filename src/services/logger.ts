@@ -1,15 +1,22 @@
-import winston from 'winston';
+import { createLogger, format, transports } from 'winston';
 
-let logger =  winston.createLogger({
+const { combine, timestamp, prettyPrint, colorize, errors } = format;
+
+let logger =  createLogger({
     level: 'info',
-    format: winston.format.json(),
+    format: combine(
+        errors({ stack: true }), // <-- use errors format
+        colorize(),
+        timestamp(),
+        prettyPrint()
+      ),
     transports: [
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new transports.File({ filename: 'error.log', level: 'error' }),
     ]
 });
 
-logger.add(new winston.transports.Console({
-    format: winston.format.simple()
+logger.add(new transports.Console({
+    format: format.simple()
 }));
 
 
