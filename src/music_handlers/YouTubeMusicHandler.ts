@@ -57,7 +57,13 @@ class YouTubeMusicHandler implements IBaseMusicHandler {
     public async getStream(url) {
         let stream = await ytdl(url, {
             highWaterMark: 2500000,
-            filter: 'audioandvideo' 
+            filter: 'audioandvideo',
+            range: { start: 0 }, 
+            requestOptions: {
+                headers: {
+                    'Cookie': process.env.YOUTUBE_COOKIE
+                }
+            }
         });
 
         return { stream: stream, type: 'opus' };

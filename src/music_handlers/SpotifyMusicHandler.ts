@@ -4,7 +4,6 @@ import YoutubeMusicApi from 'youtube-music-api';
 import YouTubeHandler from './YouTubeMusicHandler';
 import logger from '../services/logger';
 
-//https://open.spotify.com/album/3JfSxDfmwS5OeHPwLSkrfr?si=2HTRJzihRS6soTaYDP2XkA
 class SpotifyMusicHandler implements IBaseMusicHandler {
     private spotifyApi = null;
     private youtubeMusicApi = null;
