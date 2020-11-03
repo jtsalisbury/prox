@@ -45,7 +45,7 @@
         "youtube-music-api": "^1.0.5",
         "youtube-playlist": "^1.0.4",
         "youtube-search": "^1.1.4",
-        "ytdl-core": "^2.1.7",
+        "ytdl-core": "^4.0.0",
         "ytdl-core-discord": "^1.2.4"
     },
     "scripts": {
