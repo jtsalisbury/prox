@@ -12,7 +12,6 @@ import CommandHandler from './models/CommandHandler';
 import logger from './services/logger';
 
 import server from 'http'
-import socketio from 'socket.io';
 
 import socketioAuth from 'socket.io-auth';
 import { Message } from 'discord.js';
@@ -180,7 +179,7 @@ export default function initializeWeb(client) {
 
     // Socket connections
     let serv = server.createServer(app);
-    let io = socketio(server);
+    let io = require('socket.io')(server);
 
     socketioAuth(io, {
         authenticate: (socket, data, callback) => {
