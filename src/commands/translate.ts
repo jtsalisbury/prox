@@ -20,7 +20,7 @@ translate.params = [
         allowedValues: codes
     },
     {
-        name: 'stext',
+        name: 'text to translate',
         type: 'string'
     }
 ];

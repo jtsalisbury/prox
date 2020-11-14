@@ -8,6 +8,10 @@ export default class ListParam extends BaseParam {
     }
 
     convert = function(value, _) {
+        if (typeof value == 'undefined') {
+            return;
+        }
+
         let converted = value.trim().toLowerCase();
         let allowedValues = this.getAllowedValues();
     

@@ -62,7 +62,7 @@ function startGame(guildId: string, word: string) {
         }
     })
 
-    sendMessage('Okay, here we go! You can guess by sendMessageing a single letter, or you can try to guess the whole word', game.channel);
+    sendMessage('Okay, here we go! You can guess by sending a single letter, or you can try to guess the whole word', game.channel);
     print(guildId);
 }
 
