@@ -88,6 +88,25 @@ insult.callback = async function(message: Message, user?: string) {
     return res;
 }
 
+let compliment = <IBaseCommand>{};
+compliment.aliases = ['compliment'];
+compliment.prettyName = 'Compliment';
+compliment.help = 'Generate a compliment';
+compliment.category = 'Misc';
+compliment.executeViaIntegration = false;
+compliment.params = [];
+compliment.callback = async function(message: Message) {
+    // Grab compliment
+    let res: any = await _utils.HTTPGet('https://complimentr.com/api');
+
+    if (!res.compliment) {
+        return;
+    }
+
+    return res.compliment.substr(0, 1).toUpperCase() + res.compliment.substr(1);
+}
+
+
 let trump = <IBaseCommand>{};
 trump.aliases = ['trump'];
 trump.prettyName = 'Trump';
@@ -124,4 +143,4 @@ summit.callback = async function(message: Message) {
     return 'Summit is down!';
 }
 
-export let commands = [ping, git, gimme, say, insult, trump, summit];
+export let commands = [ping, git, gimme, say, insult, compliment, trump, summit];
