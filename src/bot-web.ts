@@ -179,7 +179,7 @@ export default function initializeWeb(client) {
 
     // Socket connections
     let serv = server.createServer(app);
-    let io = require('socket.io')(server);
+    let io = require('socket.io')(serv);
 
     socketioAuth(io, {
         authenticate: (socket, data, callback) => {
