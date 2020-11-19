@@ -128,7 +128,7 @@ summit.aliases = ['summit'];
 summit.prettyName = 'summit';
 summit.help = 'Ping summit.nhacks.dev';
 summit.category = 'Misc';
-summit.executeViaIntegration = false;;
+summit.executeViaIntegration = false;
 summit.callback = async function(message: Message) {
     try {
         let result = await minecraft.status('summit.nhacks.dev', { port: 25585 });
