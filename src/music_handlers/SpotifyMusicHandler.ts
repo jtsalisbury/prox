@@ -118,6 +118,8 @@ class SpotifyMusicHandler implements IBaseMusicHandler {
             return this.getSongDataFromYoutube(data.body.tracks.items);
         }
 
+        // TODO: Track support
+
         if (!descriptor) {
             return [];
         }
