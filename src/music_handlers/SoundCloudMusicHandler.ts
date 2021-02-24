@@ -1,10 +1,17 @@
 
 import { IBaseMusicHandler, ISongData } from '../models/IBase';
-import scdl from 'soundcloud-downloader';
+import * as sc from 'soundcloud-downloader';
 
 // TODO: SoundCloud doesn't work with some links, I think it's because we're determining opus, but may be in mp3
 
 class SoundCloudMusicHandler implements IBaseMusicHandler {
+    soundcloud: any = null;
+    constructor() {
+        this.soundcloud = sc.create({
+            clientID: process.env.SOUNDCLOUD_API
+        });
+    }
+
     public getName(): string {
         return 'SoundCloud';
     }
@@ -16,7 +23,7 @@ class SoundCloudMusicHandler implements IBaseMusicHandler {
     public async getSongs(link): Promise<ISongData[]> {
         let songs = [];
 
-        let songInfo = await scdl.getInfo(link, process.env.SOUNDCLOUD_API);
+        let songInfo = await this.soundcloud.getInfo(link, process.env.SOUNDCLOUD_API);
 
         songs.push({
             title: songInfo.title,
@@ -34,10 +41,10 @@ class SoundCloudMusicHandler implements IBaseMusicHandler {
         let stream;
         let type;
         try {
-            stream = await scdl.downloadFormat(url, scdl.FORMATS.OPUS, process.env.SOUNDCLOUD_API);
+            stream = await this.soundcloud.downloadFormat(url, sc.default.FORMATS.OPUS);
             type = 'ogg/opus';
         } catch (e)  {
-            stream = await scdl.downloadFormat(url, scdl.FORMATS.MP3, process.env.SOUNDCLOUD_API);
+            stream = await this.soundcloud.downloadFormat(url, sc.default.FORMATS.MP3);
             type = 'unknown';
         }
 

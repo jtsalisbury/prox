@@ -11,6 +11,8 @@ let getResults = function(location: string) {
 }
 
 let addCommas = function(x) {
+    if (x == null) { return "n/a" }
+
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
@@ -67,6 +69,8 @@ covid.params = [
 covid.callback = async function(message: Message, location: string, type: string) {
 
     let covidData = await getResults(location);
+
+    console.log(covidData)
     
     return getFormat(location, 'current', covidData);
 }
