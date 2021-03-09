@@ -29,6 +29,7 @@
         "node-witai-speech": "^1.0.2",
         "opusscript": "0.0.8",
         "path": "^0.12.7",
+        "regression": "^2.0.1",
         "request": "^2.88.2",
         "shelljs": "^0.8.4",
         "socket.io": "^3.0.5",

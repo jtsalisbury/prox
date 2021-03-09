@@ -27,7 +27,7 @@ export default class SpeechInterpreter {
                 .outputOptions(['-ar 16000', '-ac:a 1']);
 
             cmd.on('end', () => {
-                resolve();
+                resolve("");
             });
 
             cmd.on('error', (err, stdout, stderr) => {

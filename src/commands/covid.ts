@@ -1,6 +1,7 @@
 import { Message } from "discord.js";
 import { IBaseCommand } from "../models/IBase";
 import * as _utils from '../services/utils';
+import * as regression from 'regression';
 
 let getResults = function(location: string) {
     if (location == 'us') {
@@ -75,4 +76,35 @@ covid.callback = async function(message: Message, location: string, type: string
     return getFormat(location, 'current', covidData);
 }
 
-export let commands = [covid];
+let lastTwoWeeks = []
+let population = 11689100
+let pathTo50 = <IBaseCommand>{};
+pathTo50.aliases = ['pathto50'];
+pathTo50.prettyName = 'Path to 50';
+pathTo50.help = 'Determines the day that Ohio\'s covid cases per 100,000 is at or below 50';
+pathTo50.category = 'Coronavirus';
+pathTo50.executeViaIntegration = false;
+pathTo50.params = []
+pathTo50.callback = async function(message) {
+    let results = await getResults("oh")
+    let curNum = 0
+    for (let i = 1; i < 14; i++) {
+        lastTwoWeeks.push([14 - i - 1, results[i].positiveIncrease])
+        curNum += results[i].positiveIncrease
+    }
+
+    let casesPer100k = curNum / population * 100000
+
+    let result = regression.exponential(lastTwoWeeks)
+    let a = result.equation[0]
+    let b = result.equation[1]
+
+    let daysFromNowExc = Math.log(50/a)/b - 1
+
+    let targetDate = new Date()
+    targetDate.setDate(targetDate.getDate() + Math.ceil(daysFromNowExc))
+
+    return `There are currently ${Math.round(casesPer100k)} cases per 100,000 people.\nUsing Ohio case data, we can expect the number of cases to be at 50 per 100,000 on ${targetDate.toDateString()}\nPlease note: This is a gross overestimation, as Ohio's official calculation does not include COVID cases in prisons, but our data does not distinguish this.`
+}
+
+export let commands = [covid, pathTo50];
