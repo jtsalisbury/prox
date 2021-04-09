@@ -167,10 +167,12 @@ client.on('guildDelete', (guild: any) => {
 });
 
 // We have a new message
-client.on('message', async message => {
+client.on('message', async (message: Discord.Message) => {
     let response = await processMessage(message);
 
     if (response) {
         sendMessage(response, message.channel);
+    } else if (message.content.toLowerCase().includes('isiah')) {
+        sendMessage('🍆💦💦', message.channel)
     }
 });
