@@ -1,5 +1,7 @@
 import express from 'express';
+import cors from 'cors';
 let app = express();
+app.use(cors);
 
 import GithubWebHook from 'express-github-webhook';
 import bodyParser from 'body-parser';
@@ -58,9 +60,6 @@ export default function initializeWeb(client) {
                 canExecuteExternally: cmdObj.getExternal()
             });
         });
-
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
         res.status(200).send(JSON.stringify(results));
     });
