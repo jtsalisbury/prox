@@ -9,10 +9,15 @@ import utils from 'util';
 import * as _utils from '../services/utils'; // i chose a great name didn't i
 import logger from '../services/logger';
 
+import fetch from 'node-fetch';
+import xmlParse from 'fast-xml-parser';
+import {decode as htmlDecode} from 'html-entities'
+
 import ytsearch from 'youtube-search';
 
-import { Message, TextChannel } from 'discord.js';
+import {Message, TextChannel, MessageEmbed } from 'discord.js';
 import { IBaseCommand, ISongData, ISongQueue } from '../models/IBase';
+import { url } from 'node:inspector';
 
 
 let ytsearchProm = utils.promisify(ytsearch);
@@ -393,6 +398,88 @@ play.callback = async function(message: Message, descriptor: string) {
 
     return `Added ${songs.length} songs to the queue`;
 }
+let radio = <IBaseCommand>{};
+radio.aliases = ['radio'];
+radio.prettyName = 'Play a Radio Station';
+radio.help = 'Search for and plays an internet radio station (try !radio inhailer)';
+radio.category = 'Music';
+radio.params = [
+    {
+        name: 'search for station',
+        type: 'string'
+    }
+];
+radio.executeViaIntegration = true;
+radio.executePermissions = ['SPEAK', 'CONNECT'];
+radio.callback = async function(message: Message, descriptor: string) {
+    // If there's a server queue add the song
+    let queue = getServerQueue(message.guild.id);
+    if (queue) {
+            //stop queue
+            queue.songs = [];
+            queue.dispatcher.end();
+    }
+
+    if (!verifyChannelPerms(message)) {
+        return;
+    }
+    let voiceMgr = getVoiceManager(message.guild.id);
+
+    if (!voiceMgr.getConnection()) {
+        await voiceMgr.joinChannel(message.member.voice.channel);
+    }
+    //First search for a station
+    let searchResultRaw = await fetch(`https://opml.radiotime.com/Search.ashx?query=${descriptor}`);
+    let searchResultsText = await searchResultRaw.text();
+    let searchResult = xmlParse.parse(searchResultsText, {ignoreAttributes: false, attributeNamePrefix: ''})["opml"];
+    let chosenStation;
+    if(searchResult.head.status === 200) {
+        for(let i = 0; i < searchResult.body.outline.length; i++) {
+            let result = searchResult.body.outline[i];
+            if(result.type === 'audio' && result.item === 'station') {
+                chosenStation = result;
+                break;
+            }
+        };
+    }
+    //Search results return a m3u file, which is a
+    //playlist text file with each new line being a 
+    //potential stream URL or another m3u file (inception)
+    let m3uResponse = await fetch(chosenStation.URL);
+    let m3uText: string = await m3uResponse.text();
+    m3uText = m3uText.trimEnd();
+    let potentialStreams: string[] = m3uText.split('\n');
+    for(let i = 0; i < potentialStreams.length; i++) {
+        let stream: string = potentialStreams[i];
+        let fileExt = stream.substring(stream.length - 3)
+        if(fileExt !== ".m3u" && fileExt !== "pls") {
+            logger.info(`Found station stream url ${stream}`)
+            chosenStation.streamDownloadURL = stream;
+            break;
+        }
+    }
+    let song: ISongData[] = [{
+        title: `RADIO: ${chosenStation.title}`,
+        url: chosenStation.URL, 
+        artists: {},
+        type: 'Radio'
+    }];
+    queue = await createNewQueue(message, song);
+
+    let dispatcher = voiceMgr.getConnection().play(chosenStation.streamDownloadURL, { 
+        volume: 1
+    });
+    queue.dispatcher = dispatcher;
+    const responseMessage = new MessageEmbed()
+                            .setAuthor('Prox Radio Player')
+                            .setTitle(`Tuned to: ${chosenStation.text}`)
+                            .setDescription(htmlDecode(chosenStation.subtext))
+                            .setThumbnail(chosenStation.image)
+                            .addFields({name: 'Bitrate', value: chosenStation.bitrate, inline: true}, 
+                                       {name: 'Reliability', value: chosenStation.reliability, inline: true})
+
+    message.channel.send(responseMessage);
+}
 
 let enqueue = <IBaseCommand>{};
 enqueue.aliases = ['add', 'a'];
@@ -619,4 +706,4 @@ export let initialize = function(client) {
     });
 }
 
-export let commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume, autoplay];
+export let commands = [enqueue, dequeue, getQueue, clear, play, stop, pause, resume, skip, volume, autoplay, radio];
