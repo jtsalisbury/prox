@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 let app = express();
-app.use(cors);
+app.use(cors());
+app.options('*', cors())
 
 import GithubWebHook from 'express-github-webhook';
 import bodyParser from 'body-parser';
