@@ -35,6 +35,7 @@ export async function processMessage(message: Message, external = false): Promis
                     logger.info('Sending integration message to ' + integration.name + ' with message ' + message.content);
                     integration.connections[socketId].emit('message', {
                         sender: message.author.username, 
+                        guild: message.guild.name,
                         content: message.content 
                     });
                 }

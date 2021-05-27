@@ -14,8 +14,6 @@ import CommandHandler from './models/CommandHandler';
 import logger from './services/logger';
 
 import server from 'http'
-
-import socketioAuth from 'socket.io-auth';
 import { Message } from 'discord.js';
 
 // We need to initialize this after our client has been initiated
@@ -68,12 +66,14 @@ export default function initializeWeb(client) {
     app.get('/auth', async (req, res) => {
         let token = req.header('X-PROX-Signature');
         if (!token || !IntegrationManager.getIntegration(token.toLowerCase)) {
+            logger.info("Token not set")
             res.status(500).send(JSON.stringify({
                 response: 'token not set'
             }));
             return 
         }
-
+            
+        logger.info("Authorization confirmed")
         res.status(200).send(JSON.stringify({
             response: 'valid authorization'
         }));
@@ -180,9 +180,13 @@ export default function initializeWeb(client) {
     let serv = server.createServer(app);
     let io = require('socket.io')(serv);
 
-    socketioAuth(io, {
-        authenticate: (socket, data, callback) => {
-            let token = data.signature;
+    io.on('connection', (socket) => {
+        logger.info('New socket connected');
+
+        socket.on('authentication', (obj) => {
+            logger.info('Attempting auth');
+
+            let token = obj.signature;
 
             if (token) {
                 token = token.toLowerCase();
@@ -193,14 +197,12 @@ export default function initializeWeb(client) {
             // Need to verify that the token is valid
             if (!token || IntegrationManager.getIntegration(token) == undefined ) {
                 logger.info('Client failed to authenticate');
-                return callback(new Error('token not valid or guilds not loaded'));
+
+                socket.emit('unauthorized', 'Incorrect token or integration not setup');
+                return;
             }
 
-            return callback(null, true);
-        },
-        postAuthenticate: (socket, data) => {
-            // Store the authorization on the socket so we don't have to constantly send it
-            socket.authorization = data.signature.toLowerCase();
+            socket.authorization = token;
 
             // Add our new socket in our integrations cache
             // Since we've already verified the token exists, we can just use it
@@ -226,9 +228,11 @@ export default function initializeWeb(client) {
                 });
             });
 
+            socket.emit('authenticated')
             logger.info('Socket connection established');
-        },
-        disconnect: (socket) => {
+        })
+
+        socket.on('disconnect', (socket) => {
             if (!socket.authorization) {
                 return;
             }
@@ -244,9 +248,7 @@ export default function initializeWeb(client) {
             delete intData.connections[socket.id];
 
             logger.info('Socket connection terminated');
-        },
-    }, {
-        timeout: (process.env.DEBUG_MODE ? 'none' : 1000)
+        })
     })
 
     serv.listen(process.env.PORT);
