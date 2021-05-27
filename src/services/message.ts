@@ -7,7 +7,7 @@ import IntegrationManager from '../models/IntegrationManager';
 import logger from '../services/logger';
 import Command from '../models/Command';
 
-import { Message, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, TextChannel } from 'discord.js';
 
 /**
  * Handles the processing of a Discord Message, including execution of the command
@@ -105,7 +105,7 @@ export async function processMessage(message: Message, external = false): Promis
  * @param string, the message to send
  * @param target, the TextChannel or user
  */
-export function sendMessage(string: string, target) {
+export function sendMessage(string: string | MessageEmbed, target) {
     return target.send(string, { split: true });
 }
 

@@ -22,6 +22,8 @@ class YouTubeMusicHandler implements IBaseMusicHandler {
             result.data.playlist.forEach(songInfo => {
                 links.push(songInfo.url);
             });
+        } else if (link.indexOf('user') !== -1) {
+            return []
         } else {
             links.push(link);
         }
@@ -46,6 +48,7 @@ class YouTubeMusicHandler implements IBaseMusicHandler {
             songs.push({
                 title: songInfo.videoDetails.title,
                 url: songInfo.videoDetails.video_url,
+                thumbnail: songInfo.videoDetails.thumbnails.length > 0 ? songInfo.videoDetails.thumbnails[0].url : null,
                 artists: artists,
                 type: this.getName()
             });
@@ -92,6 +95,7 @@ class YouTubeMusicHandler implements IBaseMusicHandler {
                 title: related.title,
                 url: `https://www.youtube.com/watch?v=${related.id}`,
                 author: related.author,
+                thumbnail: moreInfo.videoDetails.thumbnails.length > 0 ? moreInfo.videoDetails.thumbnails[0].url : null,
                 autoplay: true,
                 artists: artists,
                 type: this.getName()

@@ -28,6 +28,7 @@ class SoundCloudMusicHandler implements IBaseMusicHandler {
         songs.push({
             title: songInfo.title,
             url: link,
+            thumbnail: songInfo.artwork_url,
             artists: {
                 [songInfo.user.full_name]: 1
             },

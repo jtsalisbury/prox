@@ -61,7 +61,7 @@ class SpotifyMusicHandler implements IBaseMusicHandler {
 
             let descriptor = `${name} by ${artist}`;
 
-            return this.youtubeMusicApi.search(descriptor);
+            return this.youtubeMusicApi.search(descriptor, 'song');
         });
 
         // gotta love the world of promises
@@ -82,9 +82,22 @@ class SpotifyMusicHandler implements IBaseMusicHandler {
                         artists[artist] = 1;
                     }
 
+                    let multipleThumbnails = Array.isArray(result.content[0].thumbnails)
+                    let thumbnail = null
+                    if (multipleThumbnails) {
+                        thumbnail = result.content[0].thumbnails[0].url
+                    } else {
+                        thumbnail = result.content[0].thumbnails.url
+                    }
+
+                    if (result.content[0].videoId == undefined) {
+                        return
+                    }
+
                     songs.push({
                         title: result.content[0].name,
                         url: `http://www.youtube.com/watch?v=${result.content[0].videoId}`,
+                        thumbnail: thumbnail,
                         artists: artists,
                         type: YouTubeHandler.getName()
                     })

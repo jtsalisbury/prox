@@ -30,6 +30,7 @@ export interface IBaseMusicHandler {
 }
 
 export interface ISongData {
+    thumbnail?: string;
     title: string;
     url: string;
     artists: object;

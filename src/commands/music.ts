@@ -17,8 +17,6 @@ import ytsearch from 'youtube-search';
 
 import {Message, TextChannel, MessageEmbed } from 'discord.js';
 import { IBaseCommand, ISongData, ISongQueue } from '../models/IBase';
-import { url } from 'node:inspector';
-
 
 let ytsearchProm = utils.promisify(ytsearch);
 
@@ -121,10 +119,10 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
         let artistStr = "";
         let nextSongArtists = Object.keys(next.artists);
         if (nextSongArtists.length > 0) {
-            artistStr = `by **${nextSongArtists[0]}**`;
+            artistStr = `${nextSongArtists[0]}`;
         }
 
-        nextSong = `The next song is **${next.title}** ${artistStr}`;
+        nextSong = `${next.title} by ${artistStr}`;
     } else {
         if (queue.autoplay) {
             let related = await getRelatedVideo(curSong);
@@ -135,10 +133,10 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
 
                 queue.songs.push(related); // title, url, autoplay, author
 
-                nextSong = `Autoplay is enabled. The next song will be **${related.title} by ${related.author}** if no songs are added.`;
+                nextSong = `${related.title} by ${related.author}`;
             }
         } else {
-            nextSong = 'There is no song up next';
+            nextSong = 'Nothing';
         }
     }
 
@@ -147,10 +145,21 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
 
     let artistStr = "";
     if (curSongArtists.length > 0) {
-        artistStr = `by **${curSongArtists[0]}** `;
+        artistStr = `${curSongArtists[0]}`;
     }
 
-    sendMessage(`Now playing **${curSong.title}** ${artistStr}at **${queue.volume}%**\n${nextSong}`, channel);
+    let response = new MessageEmbed().setAuthor('Prox Music Player')
+                      .setTitle(`Now playing`)
+                      .setDescription(`${curSong.title} by ${artistStr}`)
+                      .addFields({name: 'Next up', value: nextSong, inline: true})
+                      .addFields({name: 'Volume', value: queue.volume + '%', inline: true})
+                      .addFields({name: 'Autoplay', value: queue.autoplay ? 'Enabled' : 'Disabled', inline: true});
+
+    if (curSong.thumbnail) {
+        response.setThumbnail(curSong.thumbnail)
+    }
+
+    channel.send(response);
 }
 
 // Note: artists, songs can only be tracked if the info is on youtube
@@ -222,7 +231,8 @@ async function getSongs(descriptor: string, type: string) {
     if (descriptor.indexOf('youtube.com') === -1 && descriptor.indexOf('soundcloud.com') === -1 && descriptor.indexOf('spotify.com') === -1) {
         let opts = {
             maxResults: 1,
-            key: process.env.YOUTUBE_API
+            key: process.env.YOUTUBE_API,
+            type: 'video,playlist'
         }
         
         let result = <any>await ytsearchProm(descriptor, opts).catch(err => {
@@ -395,8 +405,6 @@ play.callback = async function(message: Message, descriptor: string) {
 
     // Play next song will ping messages for the bot
     playNextSong(message.guild.id, <TextChannel>message.channel);
-
-    return `Added ${songs.length} songs to the queue`;
 }
 let radio = <IBaseCommand>{};
 radio.aliases = ['radio'];
