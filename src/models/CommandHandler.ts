@@ -3,7 +3,7 @@ import GuildManager from './GuildManager';
 import { sendMessage, sendCommandError } from '../services/message';
 import * as _utils from '../services/utils';
 
-import { Message, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, TextChannel } from 'discord.js';
 import { BaseParam } from './BaseParam.js';
 
 class CommandHandler {
@@ -16,7 +16,7 @@ class CommandHandler {
                     name: string, 
                     help: string, 
                     category: string,
-                    callback: (Message, ...any) => Promise<String> | Promise<void>  | void, 
+                    callback: (Message, ...any) => Promise<String> | Promise<MessageEmbed> | Promise<void>  | void, 
                     userPerms?: string[], 
                     execPerms?: string[], 
                     external?: boolean): Command {

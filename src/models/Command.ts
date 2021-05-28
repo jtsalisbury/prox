@@ -1,3 +1,4 @@
+import { MessageEmbed } from "discord.js";
 import { BaseParam } from "./BaseParam";
 
 export default class Command {
@@ -15,7 +16,7 @@ export default class Command {
                 prettyName: string, 
                 help: string, 
                 category: string,
-                callback: (Message, ...any) => Promise<String> | Promise<void>  | void, 
+                callback: (Message, ...any) => Promise<String> | Promise<MessageEmbed> | Promise<void>  | void, 
                 userPerms?: string[], 
                 execPerms?: string[], 
                 external?: boolean) {

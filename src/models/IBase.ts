@@ -1,4 +1,4 @@
-import { Message, TextChannel, VoiceChannel } from 'discord.js';
+import { Message, MessageEmbed, TextChannel, VoiceChannel } from 'discord.js';
 
 export interface IBaseParamData {
     name: string;
@@ -15,7 +15,7 @@ export interface IBaseCommand {
     help: string;
     category: string;
     params: IBaseParamData[];
-    callback: (Message, ...any) => Promise<String> | Promise<void> | void;
+    callback: (Message, ...any) => Promise<String> | Promise<MessageEmbed> | Promise<void> | void;
     userPermissions?: string[];
     executePermissions?: string[];
     executeViaIntegration?: boolean;
