@@ -74,6 +74,7 @@ let reactions = [
     "\u0037\u20E3",
     "\u0038\u20E3",
     "\u0039\u20E3",
+    "🔟"
 ];
 create.callback = async function(message: Message, question: string, ...options) {
     let channelId = message.channel.id;
