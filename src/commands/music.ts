@@ -57,14 +57,16 @@ let getStream = async function(curSong: ISongData): Promise<object> {
     return await handler.getStream(curSong.url);
 }
 
-let getRelatedVideo = async function(curSong: ISongData): Promise<ISongData> {
+let getRelatedVideo = async function(curSong: ISongData, guildId: string): Promise<ISongData> {
     let handler = MusicHandlers[curSong.type];
     if (!handler) {
         logger.error('No handler available to play ' + curSong.url);
         return;
     }
 
-    return await handler.getNext(curSong.url);
+    let queue = getServerQueue(guildId);
+
+    return await handler.getNext(curSong.url, queue.recent);
 }
 
 let playNextSong = async function(guildId: string, channel: TextChannel) {
@@ -125,7 +127,7 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
         nextSong = `${next.title} by ${artistStr}`;
     } else {
         if (queue.autoplay) {
-            let related = await getRelatedVideo(curSong);
+            let related = await getRelatedVideo(curSong, guildId);
 
             if (typeof(related) == 'string') {
                 nextSong = related
@@ -147,6 +149,12 @@ let playNextSong = async function(guildId: string, channel: TextChannel) {
     if (curSongArtists.length > 0) {
         artistStr = `${curSongArtists[0]}`;
     }
+    
+    // Only keep 5 songs in the most recent played
+    if (queue.recent.length > 5) {
+        queue.recent.splice(0, 1)
+    }
+    queue.recent.push(curSong.title)
 
     let response = new MessageEmbed().setAuthor('Prox Music Player')
                       .setTitle(`Now playing`)
@@ -211,6 +219,7 @@ let createNewQueue = async function(message: Message, songs: ISongData[]): Promi
         voiceChannel: message.member.voice.channel,
         dispatcher: null,
         songs: songs,
+        recent: [],
         volume: 15,
         playing: true,
         autoplay: GuildManager.getGuild(message.guild.id).autoplayEnabled
@@ -333,7 +342,7 @@ autoplay.callback = async function(message: Message, state: string) {
 
         if (queue && queue.songs.length == 1) {  
             let curSong = <ISongData>queue.songs[0];
-            let related = await getRelatedVideo(curSong);
+            let related = await getRelatedVideo(curSong, message.guild.id);
 
             if (typeof(related) == 'string') {
                 nextSong = related

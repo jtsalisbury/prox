@@ -26,7 +26,7 @@ export interface IBaseMusicHandler {
     isMatch(link: string): boolean;
     getSongs(link: string): Promise<ISongData[]>;
     getStream(url: string): any;
-    getNext(url: string): any;
+    getNext(url: string, lastPlayed?: string[]): any;
 }
 
 export interface ISongData {
@@ -44,6 +44,7 @@ export interface ISongQueue {
     voiceChannel: VoiceChannel;
     dispatcher: any;
     songs: ISongData[];
+    recent: string[];
     volume: number;
     playing: boolean;
     autoplay: boolean;

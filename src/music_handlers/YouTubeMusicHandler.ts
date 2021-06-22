@@ -1,6 +1,9 @@
 import { IBaseMusicHandler, ISongData } from '../models/IBase';
 import ytdl from 'ytdl-core-discord';
+import * as similar from 'string-similarity';
 import ytlist from 'youtube-playlist';
+
+const MATCH_CUTOFF = 0.7; // should be high enough to get rid of identical plays & really close ones? who knows
  
 class YouTubeMusicHandler implements IBaseMusicHandler {
     public getName(): string {
@@ -72,11 +75,36 @@ class YouTubeMusicHandler implements IBaseMusicHandler {
         return { stream: stream, type: 'opus' };
     }
 
-    public async getNext(url) {
+    public async getNext(url, lastPlayed) {
         let songInfo = await ytdl.getInfo(url);
-            
-        if (songInfo.related_videos.length > 0) {
-            let related = songInfo.related_videos[0];
+        let numRelated = songInfo.related_videos.length;
+
+        if (numRelated > 0) {
+            let i = 0;
+            let related = null;
+            let score = 1;
+
+            while (score > MATCH_CUTOFF) {
+                related = songInfo.related_videos[i]
+                let relatedTitle = related.title;
+
+                if (lastPlayed.length == 0) {
+                    score = 0;
+                }
+
+                // We've tried all possible related videos and didn't find a good match! Play whatever was first
+                if (i + 1 == numRelated) {
+                    related = songInfo.related_videos[0];
+                    break;
+                }
+
+                for (let j = 0; j < lastPlayed.length; j++) {
+                    score = similar.compareTwoStrings(lastPlayed[j], relatedTitle);
+                    if (score > MATCH_CUTOFF) break; // no need to compare others, too close to what we already played
+                }
+
+                i = i + 1; // in case we need to go again
+            }
 
             let moreInfo = await ytdl.getInfo(`https://www.youtube.com/watch?v=${related.id}`);
             let artists = {};
