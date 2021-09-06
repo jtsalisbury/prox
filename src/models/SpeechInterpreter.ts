@@ -110,7 +110,6 @@ export default class SpeechInterpreter {
 
                         str += ' ' + output.entities[ent][0].value;
                     }
-                    
 
                     return resolve(str);
                 }
