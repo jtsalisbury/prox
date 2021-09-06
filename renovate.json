@@ -1,5 +1,20 @@
 {
   "extends": [
     "config:base"
+  ],
+  "packageRules": [
+    {
+      "packagePatterns": ["*"],
+      "excludePackagePatterns": ["ytdl-core"],
+      "enabled": false
+    },
+    {
+      "matchPackagePatterns": ["ytdl-core"],
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ],
+  "schedule": [
+    "before 2am"
   ]
 }
