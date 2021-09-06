@@ -7,11 +7,12 @@
     {
       "matchPackageNames": "ytdl-core",
       "automerge": true,
-      "automergeType": "branch"
+      "automergeType": "branch",
+      "requiredStatusChecks": null,
+      "rangeStrategy": "bump"
     }
   ],
   "schedule": [
     "before 7am"
-  ],
-  "rangeStrategy": "bump"
+  ]
 }
