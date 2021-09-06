@@ -11,8 +11,5 @@
       "requiredStatusChecks": null,
       "rangeStrategy": "bump"
     }
-  ],
-  "schedule": [
-    "before 7am"
   ]
 }
