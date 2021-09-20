@@ -9,14 +9,15 @@ import utils from 'util';
 import * as _utils from '../services/utils'; // i chose a great name didn't i
 import logger from '../services/logger';
 
-import fetch from 'node-fetch';
+import fetch, { Headers } from 'node-fetch';
 import xmlParse from 'fast-xml-parser';
 import {decode as htmlDecode} from 'html-entities'
 
 import ytsearch from 'youtube-search';
 
-import {Message, TextChannel, MessageEmbed } from 'discord.js';
+import { Message, TextChannel, MessageEmbed } from 'discord.js';
 import { IBaseCommand, ISongData, ISongQueue } from '../models/IBase';
+import { Transform, TransformCallback, TransformOptions } from 'stream'
 
 let ytsearchProm = utils.promisify(ytsearch);
 
@@ -429,6 +430,131 @@ radio.params = [
 radio.executeViaIntegration = true;
 radio.executePermissions = ['SPEAK', 'CONNECT'];
 radio.callback = async function(message: Message, descriptor: string) {
+    const METADATA_MESGS: Message[] = [];
+    interface NowPlaying {
+        title: string;
+        artist: string;
+        albumArtUrl: string;
+    }
+    let currentlyPlaying: NowPlaying;
+    interface Station {
+        bitrate: any;
+        image: string;
+        subtext: string;
+        //title of station
+        text: string;
+        streamDownloadURL: string,
+        //link to m3u file
+        URL: string,
+    }
+    class SpliceMetadata extends Transform {
+        private META_INT : number = null;
+        private byteCounter: number = 0;
+        private iterator: number = 0;
+        private tempBuffer: string = "";
+        private updateFn: (song: NowPlaying) => void = null;
+        constructor(META_INT: number, fn: (song: NowPlaying) => void, opts?: TransformOptions) {
+            super({ ...opts})
+            this.META_INT = META_INT;
+            this.updateFn = fn;
+        }
+        private extractSongTitle(raw: string): NowPlaying {
+            let np: NowPlaying = {title: null, artist: null, albumArtUrl: null};
+            let rawProc : string[] = raw.split(`'`)[1].split('-');
+            if(rawProc[1]) {
+                np.title = rawProc[1].trim();
+                np.artist = rawProc[0].trim();
+                return np;
+            }
+            else {
+                return null;
+            }
+        }
+        _transform(chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) {
+            let hexArray = chunk.toString('hex').match(/.{2}/g);
+            let filteredChunk: string = ''; 
+            chunk.forEach((byte, index) => {
+                if(this.byteCounter === this.META_INT) {
+                    this.byteCounter = 0;
+                    this.iterator = byte * 16;
+                }
+                else if(this.iterator > 0) {
+                    this.iterator--;
+                    if(byte !== 0) {
+                        this.tempBuffer += String.fromCharCode(byte);
+                    }
+                    if(this.iterator === 0) {
+                        this.updateFn(this.extractSongTitle(this.tempBuffer));
+                        this.tempBuffer = "";
+                    }
+                }
+                else {
+                    filteredChunk += hexArray[index];
+                    this.byteCounter++;
+                }
+            })
+            this.push(Buffer.from(filteredChunk, 'hex'));
+        callback();
+        }
+    }
+    async function getAlbumArt(search: NowPlaying) {
+        let searchString: string = encodeURIComponent(`${search.artist} ${search.title}`)
+        let searchResult = await fetch(`https://itunes.apple.com/search?term=${searchString}`);
+        let result = await searchResult.json();
+        search.albumArtUrl = result.results[0]?.artworkUrl100 ? result.results[0].artworkUrl100 : '';
+        return search;
+    }
+    async function updateCurrentPlaying(song: NowPlaying) {
+        let currentlyPlayingMsg = METADATA_MESGS.length > 0 ? METADATA_MESGS[0] : null;
+        let lastPlayedMsg = METADATA_MESGS.length > 1 ? METADATA_MESGS[1] : null;
+        if(song !== null) {
+            song = await getAlbumArt(song);
+            if(!currentlyPlayingMsg) {
+                const responseMessage = new MessageEmbed()
+                .setAuthor('Prox Radio Player')
+                .setTitle(`Now Playing`)
+                .setThumbnail(song.albumArtUrl)
+                .addFields({name: 'Artist', value: song.artist}, 
+                        {name: 'Song', value: song.title})
+                METADATA_MESGS[0] = await message.channel.send(responseMessage);
+                currentlyPlaying = song;
+            }
+            else if(currentlyPlayingMsg && !lastPlayedMsg) {
+                const lastPlayedEmbed = new MessageEmbed()
+                .setAuthor('Prox Radio Player')
+                .setTitle(`Last Played`)
+                .setThumbnail(currentlyPlaying.albumArtUrl)
+                .addFields({name: 'Artist', value: currentlyPlaying.artist}, 
+                        {name: 'Song', value: currentlyPlaying.title})
+                const nowPlayingEmbed = new MessageEmbed()
+                .setAuthor('Prox Radio Player')
+                .setTitle(`Now Playing`)
+                .setThumbnail(song.albumArtUrl)
+                .addFields({name: 'Artist', value: song.artist}, 
+                        {name: 'Song', value: song.title})
+                METADATA_MESGS[0] = await METADATA_MESGS[0].edit(lastPlayedEmbed);
+                METADATA_MESGS[1] = await message.channel.send(nowPlayingEmbed);
+                currentlyPlaying = song;
+            }
+            else {
+                const lastPlayedEmbed = new MessageEmbed()
+                .setAuthor('Prox Radio Player')
+                .setTitle(`Last Played`)
+                //.setThumbnail(chosenStation.image)
+                .addFields({name: 'Artist', value: currentlyPlaying.artist}, 
+                        {name: 'Song', value: currentlyPlaying.title})
+                const nowPlayingEmbed = new MessageEmbed()
+                .setAuthor('Prox Radio Player')
+                .setTitle(`Now Playing`)
+                //.setThumbnail(chosenStation.image)
+                .addFields({name: 'Artist', value: song.artist}, 
+                        {name: 'Song', value: song.title})
+                METADATA_MESGS[0] = await METADATA_MESGS[0].edit(lastPlayedEmbed);
+                METADATA_MESGS[1] = await METADATA_MESGS[1].edit(nowPlayingEmbed);
+                currentlyPlaying = song;
+            }
+        }
+    }
     // If there's a server queue add the song
     let queue = getServerQueue(message.guild.id);
     if (queue) {
@@ -442,50 +568,62 @@ radio.callback = async function(message: Message, descriptor: string) {
     }
     let voiceMgr = getVoiceManager(message.guild.id);
 
-    if (!voiceMgr.getConnection()) {
-        await voiceMgr.joinChannel(message.member.voice.channel);
-    }
     //First search for a station
-    let searchResultRaw = await fetch(`https://opml.radiotime.com/Search.ashx?query=${descriptor}`);
-    let searchResultsText = await searchResultRaw.text();
-    let searchResult = xmlParse.parse(searchResultsText, {ignoreAttributes: false, attributeNamePrefix: ''})["opml"];
-    let chosenStation;
-    if(searchResult.head.status === 200) {
-        for(let i = 0; i < searchResult.body.outline.length; i++) {
-            let result = searchResult.body.outline[i];
-            if(result.type === 'audio' && result.item === 'station') {
-                chosenStation = result;
+    // these stations aren't returned by the api, but I want them so stupid special cases
+    let chosenStation: Station = {} as Station;
+    if(descriptor.toLowerCase() == 'triple j') {
+        chosenStation.streamDownloadURL = 'https://live-radio01.mediahubaustralia.com/2TJW/mp3/stream/1/';
+        chosenStation.text = 'triple j';
+        chosenStation.subtext = 'The best new music from Australia and around the world.';
+        chosenStation.image = 'https://cdn-radiotime-logos.tunein.com/s25508g.png';
+    }
+    else if(descriptor.toLowerCase() == 'double j') {
+        chosenStation.streamDownloadURL = 'http://live-radio02.mediahubaustralia.com/DJDW/mp3/';
+        chosenStation.text = 'double j';
+        chosenStation.subtext = 'A mix of your favourite music, new tunes and the stories behind the music.';
+        chosenStation.image = 'https://www.abc.net.au/cm/rimage/9990024-1x1-large.jpg?v=2';
+    }
+    else {
+        let searchResultRaw = await fetch(`https://opml.radiotime.com/Search.ashx?query=${descriptor}`);
+        let searchResultsText = await searchResultRaw.text();
+        let searchResult = xmlParse.parse(searchResultsText, {ignoreAttributes: false, attributeNamePrefix: ''})["opml"];
+        if(searchResult.head.status === 200) {
+            for(let i = 0; i < searchResult.body.outline.length; i++) {
+                let result = searchResult.body.outline[i];
+                if(result.type === 'audio' && result.item === 'station') {
+                    chosenStation = result;
+                    break;
+                }
+            };
+        }
+        //Search results return a m3u file, which is a
+        //playlist text file with each new line being a 
+        //potential stream URL or another m3u file (inception)
+        let m3uResponse = await fetch(chosenStation.URL);
+        let m3uText: string = await m3uResponse.text();
+        m3uText = m3uText.trimEnd();
+        let potentialStreams: string[] = m3uText.split('\n');
+        for(let i = 0; i < potentialStreams.length; i++) {
+            let stream: string = potentialStreams[i];
+            let fileExt = stream.substring(stream.length - 3)
+            if(fileExt !== ".m3u" && fileExt !== "pls") {
+                chosenStation.streamDownloadURL = stream;
                 break;
             }
-        };
-    }
-    //Search results return a m3u file, which is a
-    //playlist text file with each new line being a 
-    //potential stream URL or another m3u file (inception)
-    let m3uResponse = await fetch(chosenStation.URL);
-    let m3uText: string = await m3uResponse.text();
-    m3uText = m3uText.trimEnd();
-    let potentialStreams: string[] = m3uText.split('\n');
-    for(let i = 0; i < potentialStreams.length; i++) {
-        let stream: string = potentialStreams[i];
-        let fileExt = stream.substring(stream.length - 3)
-        if(fileExt !== ".m3u" && fileExt !== "pls") {
-            logger.info(`Found station stream url ${stream}`)
-            chosenStation.streamDownloadURL = stream;
-            break;
         }
     }
     let song: ISongData[] = [{
-        title: `RADIO: ${chosenStation.title}`,
+        title: `RADIO: ${chosenStation.text}`,
         url: chosenStation.URL, 
         artists: {},
         type: 'Radio'
     }];
     queue = await createNewQueue(message, song);
-
-    let dispatcher = voiceMgr.getConnection().play(chosenStation.streamDownloadURL, { 
-        volume: 1
-    });
+    let audioStream = await fetch(chosenStation.streamDownloadURL, {headers: new Headers({'Icy-Metadata': '1'})});
+    let spliceMetadata = new SpliceMetadata(parseInt(audioStream.headers.get('icy-metaint')), updateCurrentPlaying);
+    audioStream.body.pipe(spliceMetadata);
+    let dispatcher = voiceMgr.getConnection().play(spliceMetadata);
+    dispatcher.setVolumeLogarithmic(queue.volume / 100);
     queue.dispatcher = dispatcher;
     const responseMessage = new MessageEmbed()
                             .setAuthor('Prox Radio Player')
@@ -493,7 +631,7 @@ radio.callback = async function(message: Message, descriptor: string) {
                             .setDescription(htmlDecode(chosenStation.subtext))
                             .setThumbnail(chosenStation.image)
                             .addFields({name: 'Bitrate', value: chosenStation.bitrate, inline: true}, 
-                                       {name: 'Reliability', value: chosenStation.reliability, inline: true})
+                                       {name: 'Volume', value: queue.volume, inline: true})
 
     message.channel.send(responseMessage);
 }
