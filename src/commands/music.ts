@@ -430,7 +430,7 @@ radio.params = [
 radio.executeViaIntegration = true;
 radio.executePermissions = ['SPEAK', 'CONNECT'];
 radio.callback = async function(message: Message, descriptor: string) {
-    const METADATA_MESGS: Message[] = [];
+    let mesg_fifo : Message[] = [];
     interface NowPlaying {
         title: string;
         artist: string;
@@ -452,18 +452,30 @@ radio.callback = async function(message: Message, descriptor: string) {
         private byteCounter: number = 0;
         private iterator: number = 0;
         private tempBuffer: string = "";
-        private updateFn: (song: NowPlaying) => void = null;
-        constructor(META_INT: number, fn: (song: NowPlaying) => void, opts?: TransformOptions) {
+        private updateFn: (song) => void = null;
+        constructor(META_INT: number, fn: (song) => void, opts?: TransformOptions) {
             super({ ...opts})
             this.META_INT = META_INT;
             this.updateFn = fn;
         }
-        private extractSongTitle(raw: string): NowPlaying {
+        /**
+         * Metadata comes in this format " StreamTitle='Artist - Song';"
+         * This function splits the song and artist into a readable format
+         * @param raw Metadata coming straight from the buffer 
+         */
+        private extractSongTitle(raw: string): NowPlaying | string {
             let np: NowPlaying = {title: null, artist: null, albumArtUrl: null};
-            let rawProc : string[] = raw.split(`'`)[1].split('-');
-            if(rawProc[1]) {
-                np.title = rawProc[1].trim();
-                np.artist = rawProc[0].trim();
+            let rawProc : string = raw.split(`StreamTitle='`)[1].split("';")[0];
+            let numOfDash = rawProc.replace(/[^-]/g, "").length;
+            // If there's more than one dash, we don't know if its part of the song title
+            // or splitting the artist and song, so lets just return a string and be easy 
+            if(numOfDash > 1){
+                return rawProc;
+            }
+            else if (numOfDash == 1) {
+                let splitData = rawProc.split('-');
+                np.title = splitData[1].trim();
+                np.artist = splitData[0].trim();
                 return np;
             }
             else {
@@ -504,55 +516,28 @@ radio.callback = async function(message: Message, descriptor: string) {
         search.albumArtUrl = result.results[0]?.artworkUrl100 ? result.results[0].artworkUrl100 : '';
         return search;
     }
-    async function updateCurrentPlaying(song: NowPlaying) {
-        let currentlyPlayingMsg = METADATA_MESGS.length > 0 ? METADATA_MESGS[0] : null;
-        let lastPlayedMsg = METADATA_MESGS.length > 1 ? METADATA_MESGS[1] : null;
+    async function updateCurrentPlaying(song: NowPlaying | string) {
         if(song !== null) {
-            song = await getAlbumArt(song);
-            if(!currentlyPlayingMsg) {
+            if(typeof song !== 'string') {
+                song = await getAlbumArt(song);
                 const responseMessage = new MessageEmbed()
                 .setAuthor('Prox Radio Player')
                 .setTitle(`Now Playing`)
                 .setThumbnail(song.albumArtUrl)
                 .addFields({name: 'Artist', value: song.artist}, 
                         {name: 'Song', value: song.title})
-                METADATA_MESGS[0] = await message.channel.send(responseMessage);
-                currentlyPlaying = song;
-            }
-            else if(currentlyPlayingMsg && !lastPlayedMsg) {
-                const lastPlayedEmbed = new MessageEmbed()
-                .setAuthor('Prox Radio Player')
-                .setTitle(`Last Played`)
-                .setThumbnail(currentlyPlaying.albumArtUrl)
-                .addFields({name: 'Artist', value: currentlyPlaying.artist}, 
-                        {name: 'Song', value: currentlyPlaying.title})
-                const nowPlayingEmbed = new MessageEmbed()
-                .setAuthor('Prox Radio Player')
-                .setTitle(`Now Playing`)
-                .setThumbnail(song.albumArtUrl)
-                .addFields({name: 'Artist', value: song.artist}, 
-                        {name: 'Song', value: song.title})
-                METADATA_MESGS[0] = await METADATA_MESGS[0].edit(lastPlayedEmbed);
-                METADATA_MESGS[1] = await message.channel.send(nowPlayingEmbed);
-                currentlyPlaying = song;
+                mesg_fifo.push(await message.channel.send(responseMessage));  
             }
             else {
-                const lastPlayedEmbed = new MessageEmbed()
-                .setAuthor('Prox Radio Player')
-                .setTitle(`Last Played`)
-                //.setThumbnail(chosenStation.image)
-                .addFields({name: 'Artist', value: currentlyPlaying.artist}, 
-                        {name: 'Song', value: currentlyPlaying.title})
-                const nowPlayingEmbed = new MessageEmbed()
+                const responseMessage = new MessageEmbed()
                 .setAuthor('Prox Radio Player')
                 .setTitle(`Now Playing`)
-                //.setThumbnail(chosenStation.image)
-                .addFields({name: 'Artist', value: song.artist}, 
-                        {name: 'Song', value: song.title})
-                METADATA_MESGS[0] = await METADATA_MESGS[0].edit(lastPlayedEmbed);
-                METADATA_MESGS[1] = await METADATA_MESGS[1].edit(nowPlayingEmbed);
-                currentlyPlaying = song;
-            }
+                .setDescription(song);
+                mesg_fifo.push(await message.channel.send(responseMessage));  
+            }  
+        }
+        if(mesg_fifo.length == 7) {
+            mesg_fifo.shift().delete();
         }
     }
     // If there's a server queue add the song
