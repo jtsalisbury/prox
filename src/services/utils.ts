@@ -162,9 +162,13 @@ export let cmdHelp = function(command: Command, alias: string): string {
 // 
 export let addMinecraftEmoji = async function(eMgr: GuildEmojiManager, eId: string, sender: string): Promise<GuildEmoji> {
     // first, get the senders uid
-    let uidInfo: any = await HTTPGet(`https://api.mojang.com/users/profiles/minecraft/${sender}`)
+    let uidInfo: any = await HTTPGet(`https://api.mojang.com/users/profiles/minecraft/${sender}`);
 
-    let userHead: any = await HTTPGet(` https://crafatar.com/avatars/${uidInfo.id}`);
-
-    return eMgr.create(userHead, eId);
+    return new Promise((resolve, reject) => {
+        request.defaults({ encoding: null}).get(`https://crafatar.com/avatars/${uidInfo.id}`, function(err, res, body) {
+            eMgr.create(body, eId).then((emoji: GuildEmoji) => {
+                resolve(emoji);
+            });
+        });
+    });
 }
