@@ -7,7 +7,7 @@ import IntegrationManager from '../models/IntegrationManager';
 import logger from '../services/logger';
 import Command from '../models/Command';
 
-import { Message, MessageEmbed, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, TextChannel, User } from 'discord.js';
 
 /**
  * Handles the processing of a Discord Message, including execution of the command
@@ -29,6 +29,12 @@ export async function processMessage(message: Message, external = false): Promis
                 return;
             }
 
+            let content = message.content;
+            // mark all mentions as the actual username of the person
+            message.mentions.users.array().forEach((entry: User) => {
+                content = content.replace(`<@!${entry.id}>`, '@' + entry.username);
+            });
+
             // For this channel, if the integration matches, go ahead and send it!
             if (message.channel.id == integration.channelId) {
                 for (let socketId in integration.connections) {
@@ -36,7 +42,7 @@ export async function processMessage(message: Message, external = false): Promis
                     integration.connections[socketId].emit('message', {
                         sender: message.author.username, 
                         guild: message.guild.name,
-                        content: message.content 
+                        content: content 
                     });
                 }
             }
