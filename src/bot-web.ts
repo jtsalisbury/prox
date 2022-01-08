@@ -181,7 +181,10 @@ export default function initializeWeb(client) {
             embed.setColor(extraData.color);
         }
 
-        sendMessage(embed, discordChannel);
+        logger.info(content);
+        logger.info(extraData);
+
+        sendMessage(content, discordChannel);
                 
         // Construct a *somewhat* correct message object
         let msgObj = <Message>{
