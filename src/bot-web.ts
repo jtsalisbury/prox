@@ -184,9 +184,7 @@ export default function initializeWeb(client) {
         logger.info(content);
         logger.info(extraData);
 
-        discordChannel.send(embed);
-
-       // sendMessage(content, discordChannel);
+        sendMessage(content, discordChannel);
                 
         // Construct a *somewhat* correct message object
         let msgObj = <Message>{
