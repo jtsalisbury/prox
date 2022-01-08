@@ -1,3 +1,4 @@
+import { GuildEmoji, GuildEmojiManager } from 'discord.js';
 import request from 'request';
 import Command from '../models/Command';
 
@@ -156,4 +157,12 @@ export let cmdHelp = function(command: Command, alias: string): string {
     });
 
     return `\`!${alias} ${paramHelp}\n\``
+}
+
+// 
+export let addMinecraftEmoji = async function(eMgr: GuildEmojiManager, eId: string, sender: string): Promise<GuildEmoji> {
+    // first, get the senders uid
+    let userHead: any = await HTTPGet(`https://mc-heads.net/avatar/${sender}`);
+
+    return eMgr.create(userHead, eId);
 }

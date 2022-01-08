@@ -11,11 +11,12 @@ import GuildManager from './models/GuildManager';
 import IntegrationManager from './models/IntegrationManager';
 import { messageChannelById, sendMessage, processMessage } from './services/message';
 import CommandHandler from './models/CommandHandler';
+import { addMinecraftEmoji } from './services/utils';
 
 import logger from './services/logger';
 
 import server from 'http'
-import { Message } from 'discord.js';
+import { GuildEmojiManager, Message, MessageEmbed, TextChannel } from 'discord.js';
 
 // We need to initialize this after our client has been initiated
 export default function initializeWeb(client) {
@@ -30,7 +31,7 @@ export default function initializeWeb(client) {
         }
 
         // Try and process the command
-        let result = await handleIntegration(token, req.body.sender, req.body.message);
+        let result = await handleIntegration(token, req.body.sender, req.body.message, req.body);
         if (!result) {
             res.status(500).send();
             return;
@@ -123,7 +124,7 @@ export default function initializeWeb(client) {
     });
 
     // Helper which wraps processMessage to handle integrations via HTTP and socket connections
-    let handleIntegration = async function(token, sender, message) {
+    let handleIntegration = async function(token, sender, message, extraData) {
         // Verify fields set
         // Note: Content-type: application/json needs set
         if (!sender || !message) {
@@ -154,13 +155,34 @@ export default function initializeWeb(client) {
         }
 
         // Verify discord channel exists
-        let discordChannel = discordGuild.channels.cache.array().find(element => element.id == intData.channelId);
+        let discordChannel: TextChannel = discordGuild.channels.cache.array().find(element => element.id == intData.channelId);
         if (!discordChannel) {
             return false;
         }
 
-        sendMessage(`[${intData.name}] **${sender}:** `+ message, discordChannel);
+        let content = `[${intData.name}] **${sender}:** `+ message;
+  
+        // currently support only for minecraft
+        if (extraData.emoji && extraData.emoji == 'minecraft') {
+            let emojiName = intData.name + '_' + sender;
+            let found = discordChannel.guild.emojis.cache?.find(e => e.name == emojiName);
 
+            if (!found) {
+                found = await addMinecraftEmoji(discordChannel.guild.emojis, emojiName, sender);
+            }
+
+            content = `[${intData.name}] ${found} **${sender}:** `+ message;
+        }
+
+        const embed = new MessageEmbed();
+        embed.setDescription(content);
+
+        if (extraData.color) {
+            embed.setColor(extraData.color);
+        }
+
+        sendMessage(embed, discordChannel);
+                
         // Construct a *somewhat* correct message object
         let msgObj = <Message>{
             channel: discordChannel,
@@ -213,7 +235,7 @@ export default function initializeWeb(client) {
 
             // Handle when we get a new message from a client
             socket.on('message', async (data) => {
-                let result = await handleIntegration(socket.authorization, data.sender, data.content);
+                let result = await handleIntegration(socket.authorization, data.sender, data.content, data);
 
                 if (!result) {
                     socket.emit('response', {
