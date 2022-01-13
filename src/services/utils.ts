@@ -1,6 +1,7 @@
 import { GuildEmoji, GuildEmojiManager } from 'discord.js';
 import request from 'request';
 import Command from '../models/Command';
+import logger from './logger';
 
 export let resolve = function(obj: object, path: string[] | string, value?: string): object | string {
     // Path is a string still, split it
@@ -162,6 +163,7 @@ export let cmdHelp = function(command: Command, alias: string): string {
 // 
 export let addMinecraftEmoji = async function(eMgr: GuildEmojiManager, eId: string, sender: string): Promise<GuildEmoji> {
     // first, get the senders uid
-    let uidInfo: any = await HTTPGet(`https://api.mojang.com/users/profiles/minecraft/${sender}`);
-    return eMgr.create(`https://crafatar.com/avatars/${uidInfo.id}`, eId);
+    let uidInfo: object = await HTTPGet(`https://api.mojang.com/users/profiles/minecraft/${sender}`);
+    JSON.stringify(uidInfo);
+    return eMgr.create(`https://crafatar.com/avatars/${uidInfo['id']}`, eId);
 }

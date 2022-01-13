@@ -171,8 +171,12 @@ export default function initializeWeb(client) {
                 found = await addMinecraftEmoji(discordChannel.guild.emojis, emojiName, sender);
             }
 
+            logger.info('emoji: ', found);
+
             content = `[${intData.name}] ${found} **${sender}:** `+ message;
         }
+
+        logger.info(content);
 
         const embed = new MessageEmbed();
         embed.setDescription(content);
@@ -181,7 +185,6 @@ export default function initializeWeb(client) {
             embed.setColor(extraData.color);
         }
 
-        logger.info(content);
         logger.info(extraData);
 
         sendMessage(content, discordChannel);
