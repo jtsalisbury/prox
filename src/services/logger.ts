@@ -12,6 +12,7 @@ let logger =  createLogger({
       ),
     transports: [
         new transports.File({ filename: 'error.log', level: 'error' }),
+        new transports.Console()
     ]
 });
 
