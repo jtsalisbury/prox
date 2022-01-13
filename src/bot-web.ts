@@ -161,6 +161,9 @@ export default function initializeWeb(client) {
         }
 
         let content = `[${intData.name}] **${sender}:** `+ message;
+
+        logger.info(content);
+        logger.info(JSON.stringify(extraData));
   
         // currently support only for minecraft
         if (extraData.emoji && extraData.emoji == 'minecraft') {
@@ -176,8 +179,6 @@ export default function initializeWeb(client) {
             content = `[${intData.name}] ${found} **${sender}:** `+ message;
         }
 
-        logger.info(content);
-
         const embed = new MessageEmbed();
         embed.setDescription(content);
 
@@ -185,7 +186,6 @@ export default function initializeWeb(client) {
             embed.setColor(extraData.color);
         }
 
-        logger.info(extraData);
 
         sendMessage(content, discordChannel);
                 
