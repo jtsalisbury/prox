@@ -171,12 +171,17 @@ export default function initializeWeb(client) {
             let found = discordChannel.guild.emojis.cache?.find(e => e.name == emojiName);
 
             if (!found) {
-                found = await addMinecraftEmoji(discordChannel.guild.emojis, emojiName, sender);
+                try {
+                    found = await addMinecraftEmoji(discordChannel.guild.emojis, emojiName, sender);
+                    
+                    logger.info('emoji: ', found);
+
+                    content = `[${intData.name}] ${found} **${sender}:** `+ message;
+                    
+                } catch (e) {
+                    logger.error(e);
+                }
             }
-
-            logger.info('emoji: ', found);
-
-            content = `[${intData.name}] ${found} **${sender}:** `+ message;
         }
 
         const embed = new MessageEmbed();
