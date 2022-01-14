@@ -214,6 +214,10 @@ export default function initializeWeb(client) {
     let serv = server.createServer(app);
     let io = require('socket.io')(serv);
 
+    // hotfix
+    let integrationsAdded = {};
+
+
     io.on('connection', (socket) => {
         logger.info('New socket connected');
 
@@ -233,6 +237,12 @@ export default function initializeWeb(client) {
                 logger.info('Client failed to authenticate');
 
                 socket.emit('unauthorized', 'Incorrect token or integration not setup');
+                return;
+            }
+
+            if (integrationsAdded[token]) {
+                logger.info('Duplicate socket tried connecting');
+                socket.emit('unauthorized', 'A socket already exists');
                 return;
             }
 
@@ -262,9 +272,10 @@ export default function initializeWeb(client) {
                 });
             });
 
-            socket.emit('authenticated')
+            socket.emit('authenticated');
+            integrationsAdded[socket.authorization] = socket;
             logger.info('Socket connection established');
-        })
+        });
 
         socket.on('disconnect', (socket) => {
             if (!socket.authorization) {
@@ -274,6 +285,8 @@ export default function initializeWeb(client) {
             // Cleanup the cache on disconnect
             let token = socket.authorization;
             let intData = IntegrationManager.getIntegration(token.toLowerCase());
+
+            integrationsAdded[token] = undefined;
 
             if (intData == undefined) {
                 return;
