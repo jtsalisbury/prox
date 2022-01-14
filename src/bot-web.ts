@@ -181,6 +181,8 @@ export default function initializeWeb(client) {
                 } catch (e) {
                     logger.error(e);
                 }
+            } else {
+                content = `[${intData.name}] ${found} **${sender}:** `+ message;
             }
         }
 
