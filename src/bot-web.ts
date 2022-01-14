@@ -177,7 +177,7 @@ export default function initializeWeb(client) {
                     logger.info('emoji: ', found);
 
                     content = `[${intData.name}] ${found} **${sender}:** `+ message;
-                    
+
                 } catch (e) {
                     logger.error(e);
                 }
