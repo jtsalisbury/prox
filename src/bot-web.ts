@@ -167,7 +167,9 @@ export default function initializeWeb(client) {
   
         // currently support only for minecraft
         if (extraData.emoji && extraData.emoji == 'minecraft') {
-            sender = sender.replace(/§./g, '');
+            let replaced = sender.replace(/§./g, '');
+            console.log('replacing: ' + replaced);
+            sender = replaced;
 
             let emojiName = intData.name + '_' + sender;
             let found = discordChannel.guild.emojis.cache?.find(e => e.name == emojiName);
