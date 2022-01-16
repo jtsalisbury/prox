@@ -160,6 +160,9 @@ export default function initializeWeb(client) {
             return false;
         }
 
+        sender = sender.replace(/§./g, '');
+        message = message.replace(/§./g, '');
+
         let content = `[${intData.name}] **${sender}:** `+ message;
 
         logger.info(content);
@@ -167,16 +170,12 @@ export default function initializeWeb(client) {
   
         // currently support only for minecraft
         if (extraData.emoji && extraData.emoji == 'minecraft') {
-            sender = sender.replace(/§./g, '');
-
             let emojiName = intData.name + '_' + sender;
             let found = discordChannel.guild.emojis.cache?.find(e => e.name == emojiName);
 
             if (!found) {
                 try {
                     found = await addMinecraftEmoji(discordChannel.guild.emojis, emojiName, sender);
-                    
-                    logger.info('emoji: ', found);
 
                     content = `[${intData.name}] ${found} **${sender}:** `+ message;
 

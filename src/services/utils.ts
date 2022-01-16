@@ -165,6 +165,5 @@ export let addMinecraftEmoji = async function(eMgr: GuildEmojiManager, eId: stri
     logger.info("Calling: " + `https://api.mojang.com/users/profiles/minecraft/${sender}`);
     // first, get the senders uid
     let uidInfo: object = await HTTPGet(`https://api.mojang.com/users/profiles/minecraft/${sender}`);
-    logger.info(JSON.stringify(uidInfo));
     return eMgr.create(`https://crafatar.com/avatars/${uidInfo['id']}`, eId);
 }
