@@ -167,9 +167,7 @@ export default function initializeWeb(client) {
   
         // currently support only for minecraft
         if (extraData.emoji && extraData.emoji == 'minecraft') {
-            let replaced = sender.replace(/§./g, '');
-            console.log('replacing: ' + replaced);
-            sender = replaced;
+            sender = sender.replace(/§./g, '');
 
             let emojiName = intData.name + '_' + sender;
             let found = discordChannel.guild.emojis.cache?.find(e => e.name == emojiName);
@@ -219,11 +217,7 @@ export default function initializeWeb(client) {
     // Socket connections
     let serv = server.createServer(app);
     let io = require('socket.io')(serv);
-
-    // hotfix
-    let integrationsAdded = {};
-
-
+ 
     io.on('connection', (socket) => {
         logger.info('New socket connected');
 
@@ -243,12 +237,6 @@ export default function initializeWeb(client) {
                 logger.info('Client failed to authenticate');
 
                 socket.emit('unauthorized', 'Incorrect token or integration not setup');
-                return;
-            }
-
-            if (integrationsAdded[token]) {
-                logger.info('Duplicate socket tried connecting');
-                socket.emit('unauthorized', 'A socket already exists');
                 return;
             }
 
@@ -279,11 +267,10 @@ export default function initializeWeb(client) {
             });
 
             socket.emit('authenticated');
-            integrationsAdded[socket.authorization] = socket;
             logger.info('Socket connection established');
         });
 
-        socket.on('disconnect', (socket) => {
+        socket.on('disconnect', (reason) => {
             if (!socket.authorization) {
                 return;
             }
@@ -292,7 +279,6 @@ export default function initializeWeb(client) {
             let token = socket.authorization;
             let intData = IntegrationManager.getIntegration(token.toLowerCase());
 
-            integrationsAdded[token] = undefined;
 
             if (intData == undefined) {
                 return;
@@ -300,7 +286,7 @@ export default function initializeWeb(client) {
 
             delete intData.connections[socket.id];
 
-            logger.info('Socket connection terminated');
+            logger.info('Socket connection terminated: ' + reason);
         })
     })
 
