@@ -124,7 +124,7 @@ export default function initializeWeb(client) {
     });
 
     // Helper which wraps processMessage to handle integrations via HTTP and socket connections
-    let handleIntegration = async function(token, sender, message, extraData) {
+    let handleIntegration = async function(token, sender: string, message, extraData) {
         // Verify fields set
         // Note: Content-type: application/json needs set
         if (!sender || !message) {
@@ -167,6 +167,8 @@ export default function initializeWeb(client) {
   
         // currently support only for minecraft
         if (extraData.emoji && extraData.emoji == 'minecraft') {
+            sender = sender.replace(/§./g, '');
+
             let emojiName = intData.name + '_' + sender;
             let found = discordChannel.guild.emojis.cache?.find(e => e.name == emojiName);
 
