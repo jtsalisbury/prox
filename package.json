@@ -36,7 +36,7 @@
         "regression": "^2.0.1",
         "request": "^2.88.2",
         "shelljs": "^0.8.5",
-        "socket.io": "^4.4.1",
+        "socket.io": "^4.5.3",
         "soundcloud-downloader": "^1.0.0",
         "spotify-web-api-node": "^5.0.2",
         "string-similarity": "^4.0.4",
