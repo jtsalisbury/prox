@@ -27,7 +27,7 @@
         "mathjs": "^9.5.2",
         "minecraft-server-util": "^3.7.2",
         "module-alias": "^2.2.2",
-        "mongoose": "^5.13.14",
+        "mongoose": "^6.0.0",
         "node-fetch": "^2.6.7",
         "node-opus": "^0.3.3",
         "node-witai-speech": "^1.0.2",
